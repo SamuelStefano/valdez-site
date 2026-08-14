@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 // que aparecem em render posterior (as vagas de fundador, por exemplo).
 export function useReveal() {
   useEffect(() => {
+    if (!('IntersectionObserver' in window)) return
+    document.documentElement.classList.add('anim')
+
     const io = new IntersectionObserver(
       (entries) =>
         entries.forEach((e) => {
