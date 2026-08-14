@@ -5,7 +5,7 @@ import { Privacidade, Termos } from './pages/Legal'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/privacidade" element={<Privacidade />} />
