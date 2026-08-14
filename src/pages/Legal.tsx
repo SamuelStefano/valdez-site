@@ -25,7 +25,7 @@ export function Privacidade() {
         <h2>O que o Valdez guarda</h2>
         <p>
           Enquanto o bot está num canal de voz, ele mantém em memória os últimos minutos de áudio de quem
-          está falando — 5, 15 ou 30 minutos, conforme o plano do servidor. Esse áudio existe apenas na
+          está falando — 1min30, 15 ou 30 minutos, conforme o plano do servidor. Esse áudio existe apenas na
           memória do servidor onde o bot roda e é descartado continuamente: passou da janela, sumiu.
         </p>
         <p>
@@ -101,7 +101,10 @@ export function Termos() {
       <section>
         <h2>Teste e assinatura</h2>
         <ul>
-          <li>Todo servidor novo começa com 14 dias completos, sem cartão.</li>
+          <li>
+            Todo servidor novo começa com 3 dias do plano Pro liberado por inteiro, sem cartão. O teste
+            vale uma vez por servidor e uma vez por dono de servidor.
+          </li>
           <li>Terminado o teste, o bot deixa de entrar na call até que uma assinatura seja ativada.</li>
           <li>A assinatura é mensal, por servidor, e pode ser cancelada a qualquer momento.</li>
           <li>

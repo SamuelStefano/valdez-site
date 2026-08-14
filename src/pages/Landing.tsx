@@ -145,7 +145,7 @@ function WaveformDemo() {
               <span className="rounded bg-[#5865f2]/15 px-1 py-px text-[#7aa7ff]">@pedrão</span>
             </div>
             <div className="mt-2.5 rounded-md border-l-4 border-accent bg-ink px-3.5 py-3">
-              <div className="mb-2 text-sm font-bold">🔊 clip-23h47.ogg · 2:00</div>
+              <div className="mb-2 text-sm font-bold">🔊 clip-23h47.mp3 · 1:30</div>
               <div className="flex items-center gap-2.5">
                 <span className="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-full bg-accent text-[13px] text-white">
                   ▶
