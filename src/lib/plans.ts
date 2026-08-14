@@ -52,6 +52,22 @@ export const PLANS: Plan[] = [
   },
 ]
 
+// O gratuito não é plano que alguém assina: é o que o servidor tem quando não
+// tem licença. 30s salva a risada e perde o que veio antes dela — a falta é o
+// argumento de venda do Básico.
+export const FREE = {
+  label: 'Grátis',
+  price: 0,
+  tagline: 'Pra sempre, sem cartão. O bot fica na call.',
+  support: 'Ticket pelo site',
+  features: [
+    'Clip dos últimos 30 segundos',
+    'MP3 pronto pra baixar',
+    'Sem limite de tempo, sem cartão',
+    'Música por link ou busca',
+  ],
+}
+
 export const LIFETIME = {
   label: 'Vitalício',
   price: 150,

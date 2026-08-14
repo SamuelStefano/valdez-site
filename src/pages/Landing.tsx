@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PLANS, LIFETIME, TRIAL_DAYS, TRIAL_PLAN, FOUNDER_PRICE, FOUNDER_SLOTS } from '../lib/plans'
+import {
+  PLANS,
+  FREE,
+  LIFETIME,
+  TRIAL_DAYS,
+  TRIAL_PLAN,
+  FOUNDER_PRICE,
+  FOUNDER_SLOTS,
+} from '../lib/plans'
 import { supabase } from '../lib/supabase'
 import { useSession, useIsAdmin, signInWithDiscord, signOut } from '../lib/auth'
 import { Aurora, CountUp, Reveal, Spotlight, useReveal } from '../components/motion'
@@ -150,7 +158,7 @@ const FAQ = [
   },
   {
     q: 'Preciso de cartão pra testar?',
-    a: `Não. Todo servidor novo começa com ${TRIAL_DAYS} dias do ${TRIAL_PLAN} liberado por inteiro, sem cartão e sem cadastro. Se você não assinar, o bot só para de entrar na call — não vira cobrança.`,
+    a: `Não. Todo servidor novo começa com ${TRIAL_DAYS} dias do ${TRIAL_PLAN} liberado por inteiro, sem cartão e sem cadastro. Se você não assinar, nada é cobrado e o bot continua na call no grátis, com 30 segundos de buffer.`,
   },
   {
     q: 'Quem paga: eu ou cada pessoa do servidor?',
@@ -553,14 +561,35 @@ export default function Landing() {
           <h2 className="m-0 mb-2 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
             Um preço. O servidor inteiro usa.
           </h2>
-          <p className="mx-auto m-0 mb-10 max-w-[54ch] text-center text-[15px] text-muted">
+          <p className="mx-auto m-0 mb-8 max-w-[54ch] text-center text-[15px] text-muted">
             Quem paga é você, dono do servidor — nunca cada membro. Todo servidor começa com{' '}
             <strong className="text-body">
               {TRIAL_DAYS} dias do {TRIAL_PLAN}
             </strong>
-            , o plano do meio, liberado por inteiro e sem cartão. O teste vale uma vez por servidor e
-            uma vez por dono.
+            , o plano do meio, liberado por inteiro e sem cartão. Quando o teste acaba, o bot{' '}
+            <strong className="text-body">continua na call no grátis</strong> — ele não vai embora.
           </p>
+        </Reveal>
+
+        <Reveal delay={60}>
+          <div className="mb-4.5 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-[18px] border border-edge bg-panel px-6.5 py-6 sm:px-9">
+            <div className="min-w-[180px]">
+              <div className="text-lg font-bold">{FREE.label}</div>
+              <div className="mt-1.5 flex items-baseline gap-1.5">
+                <span className="text-[34px] font-extrabold tracking-[-0.03em]">R$ 0</span>
+                <span className="text-sm text-muted">pra sempre</span>
+              </div>
+              <div className="mt-1 text-[13px] italic text-muted">{FREE.tagline}</div>
+            </div>
+            <div className="grid flex-1 gap-2 sm:grid-cols-2">
+              {FREE.features.map((f) => (
+                <div key={f} className="flex gap-2.5 text-sm leading-snug text-body">
+                  <span className="flex-none text-muted">✓</span>
+                  <span>{f}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </Reveal>
         <div className="grid items-stretch gap-4.5 sm:grid-cols-3">
           {PLANS.map((plan, i) => (
