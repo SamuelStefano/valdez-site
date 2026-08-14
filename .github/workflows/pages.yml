@@ -30,9 +30,14 @@ jobs:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
           VITE_CONTACT_EMAIL: ${{ vars.VITE_CONTACT_EMAIL }}
-      # O Pages nao tem rewrite de SPA: sem isso /admin e /termos dao 404 ao
-      # recarregar. O 404.html devolve o mesmo bundle e o router resolve a rota.
-      - run: cp dist/index.html dist/404.html
+      # O Pages nao tem rewrite de SPA. Copia por rota faz o link direto
+      # responder 200 (importa pra compartilhar e indexar); o 404.html cobre o resto.
+      - name: Rotas estaticas
+        run: |
+          cp dist/index.html dist/404.html
+          for r in admin termos privacidade; do
+            mkdir -p "dist/$r" && cp dist/index.html "dist/$r/index.html"
+          done
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
