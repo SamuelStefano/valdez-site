@@ -52,6 +52,24 @@ export const PLANS: Plan[] = [
   },
 ]
 
+export const LIFETIME = {
+  label: 'Vitalício',
+  price: 150,
+  // Entrega o Pro, não o Máximo: R$ 150 já são cinco meses de Pro adiantados, e
+  // deixar o topo fora do vitalício é o que impede o Máximo mensal de morrer.
+  equivalentTo: 'Pro',
+  monthsToBreakEven: 5,
+  slots: 50,
+  tagline: 'Paga uma vez. Nunca mais vê cobrança.',
+  support: 'Suporte direto no Discord',
+  features: [
+    'Tudo do Pro, pra sempre',
+    'Sem mensalidade, sem renovação',
+    'Preço travado mesmo se tudo subir',
+    'Vale enquanto o Valdez existir',
+  ],
+}
+
 export const TRIAL_DAYS = 3
 export const TRIAL_PLAN = 'Pro'
 export const FOUNDER_PRICE = 10

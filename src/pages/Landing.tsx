@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PLANS, TRIAL_DAYS, TRIAL_PLAN, FOUNDER_PRICE, FOUNDER_SLOTS } from '../lib/plans'
+import { PLANS, LIFETIME, TRIAL_DAYS, TRIAL_PLAN, FOUNDER_PRICE, FOUNDER_SLOTS } from '../lib/plans'
 import { supabase } from '../lib/supabase'
+import { useSession, useIsAdmin, signInWithDiscord, signOut } from '../lib/auth'
+import { Aurora, CountUp, Reveal, Spotlight, useReveal } from '../components/motion'
 
 // client_id é público por definição. As permissões são o mínimo que o bot usa:
 // ver canal, mandar mensagem, anexar arquivo, entrar/falar na call e mudar o
@@ -15,17 +17,6 @@ const AVATAR = `${import.meta.env.BASE_URL}valdez.webp`
 
 function seed(i: number) {
   return Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1
-}
-
-function useReveal() {
-  useEffect(() => {
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add('in')),
-      { threshold: 0.12 },
-    )
-    document.querySelectorAll('.reveal').forEach((el) => io.observe(el))
-    return () => io.disconnect()
-  }, [])
 }
 
 // O número de vagas só aparece quando o banco responde. Um contador chumbado no
@@ -51,21 +42,18 @@ function Cta({ children, big = false }: { children: React.ReactNode; big?: boole
       href={INVITE_URL}
       target="_blank"
       rel="noreferrer"
-      className={`inline-block rounded-xl bg-accent font-bold text-white shadow-[0_8px_40px_rgba(255,77,61,0.4)] transition hover:-translate-y-0.5 hover:bg-accent-soft ${
+      className={`group relative inline-block overflow-hidden rounded-xl bg-accent font-bold text-white shadow-[0_8px_40px_rgba(255,77,61,0.4)] transition hover:-translate-y-0.5 hover:bg-accent-soft hover:shadow-[0_12px_50px_rgba(255,77,61,0.55)] ${
         big ? 'px-9 py-4 text-lg' : 'px-7 py-4 text-[17px]'
       }`}
     >
-      {children}
+      <span className="absolute inset-0 -translate-x-full bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.28),transparent)] transition-transform duration-700 group-hover:translate-x-full" />
+      <span className="relative">{children}</span>
     </a>
   )
 }
 
 const STEPS = [
-  {
-    n: '01',
-    t: 'Adiciona o bot',
-    d: 'Um clique, permissões mínimas, pronto. Ele já sabe o que fazer.',
-  },
+  { n: '01', t: 'Adiciona o bot', d: 'Um clique, permissões mínimas, pronto. Ele já sabe o que fazer.' },
   {
     n: '02',
     t: 'Ele entra na call sozinho',
@@ -77,6 +65,130 @@ const STEPS = [
     d: 'O áudio do momento cai no canal. Mesmo que a frase já tenha passado.',
   },
 ]
+
+const PAINS = [
+  {
+    t: '"Volta, volta — o que ele falou?"',
+    d: 'Ninguém consegue repetir igual. O timing morre, a voz morre, a piada morre.',
+  },
+  {
+    t: 'Contar depois nunca funciona',
+    d: '"Tinha que estar lá" é o jeito educado de dizer que o momento se perdeu.',
+  },
+  {
+    t: 'Gravar tudo é pior ainda',
+    d: 'Ninguém vai ouvir 4 horas de call atrás de 8 segundos. E ninguém quer isso salvo.',
+  },
+]
+
+const FEATURES = [
+  {
+    icon: '🏆',
+    t: 'Quem vive na call sobe de nível.',
+    d: (
+      <>
+        Cada minuto em call vira XP. Vira nível. Vira posição no <Cmd>/leaderboard</Cmd> do servidor.
+        Aquele amigo que passa a madrugada online finalmente tem onde provar isso.
+      </>
+    ),
+  },
+  {
+    icon: '⏱️',
+    t: 'O contador de horas fica na call.',
+    d: (
+      <>
+        Quem quiser deixa o contador ligado e ele fica lá, ao vivo, somando o tempo de cada um. Quem
+        não quiser desliga e usa <Cmd>/horas</Cmd> só quando pedir.
+      </>
+    ),
+  },
+  {
+    icon: '🎧',
+    t: 'Sai MP3, não sai formato estranho.',
+    d: 'O clipe chega como MP3 no canal. Baixa e toca em qualquer celular, manda no zap, joga no vídeo. Nada de arquivo que só abre em programa de nerd.',
+  },
+  {
+    icon: '🎵',
+    t: 'E toca música, de quebra.',
+    d: (
+      <>
+        <Cmd>/play</Cmd> com link do YouTube, do Spotify ou só o nome da faixa. Um bot a menos pra
+        manter no servidor.
+      </>
+    ),
+  },
+  {
+    icon: '🛡️',
+    t: 'O clipe é seu. O resto morre.',
+    d: (
+      <>
+        O bot avisa <strong className="text-accent">[REC]</strong> no apelido e qualquer membro pode
+        dar opt-out. O áudio fora da janela é descartado continuamente — o Valdez não guarda call
+        nenhuma em servidor nenhum.
+      </>
+    ),
+  },
+  {
+    icon: '💬',
+    t: 'Tem gente do outro lado.',
+    d: 'Bug ou dúvida: no Básico você abre ticket aqui no site, no Pro fala comigo direto no Discord e no Máximo tem meu WhatsApp. Não existe robô de atendimento no meio.',
+  },
+]
+
+const FAQ = [
+  {
+    q: 'Isso é legal? Posso gravar meus amigos?',
+    a: 'Pode, desde que eles saibam — e o bot garante que saibam. Enquanto está capturando, ele mantém [REC] no próprio apelido dentro do servidor, à vista de todo mundo. Se o Discord não deixar ele mudar o apelido, ele simplesmente não liga a captura. Consentimento aqui não é uma caixinha escondida no cadastro.',
+  },
+  {
+    q: 'O áudio da minha call fica guardado em algum servidor?',
+    a: 'Não. Ele existe só na memória, pelos minutos do seu plano, e é descartado continuamente — passou da janela, sumiu. Áudio só vira arquivo quando alguém usa /clip ou /replay, e mesmo esse arquivo é enviado pro seu canal do Discord e apagado da nossa máquina em seguida.',
+  },
+  {
+    q: 'E se alguém não quiser ser gravado?',
+    a: 'Usa /privacidade optout e pronto. A voz dessa pessoa não entra no buffer nem por um instante, e o que já estava guardado dela é descartado na hora. Sem pedir pra admin, sem negociar.',
+  },
+  {
+    q: 'Preciso de cartão pra testar?',
+    a: `Não. Todo servidor novo começa com ${TRIAL_DAYS} dias do ${TRIAL_PLAN} liberado por inteiro, sem cartão e sem cadastro. Se você não assinar, o bot só para de entrar na call — não vira cobrança.`,
+  },
+  {
+    q: 'Quem paga: eu ou cada pessoa do servidor?',
+    a: 'Só você, dono do servidor. O plano é por servidor e todo mundo lá dentro usa sem pagar nada. Não existe cobrança por membro, por hora de call nem por clipe.',
+  },
+  {
+    q: 'Se eu cancelar, perco os clipes?',
+    a: 'Não. Os clipes já publicados são mensagens no canal do seu servidor — eles ficam lá pra sempre, mesmo que você cancele. O que para é o bot entrar na call de novo.',
+  },
+  {
+    q: 'Trava a call? Come banda?',
+    a: 'Não. O bot é um participante como outro qualquer da call e o processamento é todo do lado dele. Ninguém precisa instalar nada, ninguém precisa deixar programa aberto.',
+  },
+  {
+    q: 'Por que não uso o Craig, que é de graça?',
+    a: 'O Craig grava a sessão inteira pra você editar depois — é ferramenta de podcast. O Valdez é o contrário: ele não te entrega 4 horas, te entrega os 30 segundos que importaram, no canal, na hora, em português, com ranking e nível em cima. São trabalhos diferentes.',
+  },
+]
+
+const COMMANDS = [
+  '/clip',
+  '/replay',
+  '/horas',
+  '/leaderboard',
+  '/play',
+  '/config',
+  '/privacidade',
+  '/assinatura',
+  '/feedback',
+]
+
+function Cmd({ children }: { children: React.ReactNode }) {
+  return (
+    <code className="rounded-md border border-edge bg-ink px-2 py-0.5 font-mono text-[0.9em] text-[#e8eaf0]">
+      {children}
+    </code>
+  )
+}
 
 function WaveformDemo() {
   const bars = useMemo(() => {
@@ -169,25 +281,99 @@ function WaveformDemo() {
   )
 }
 
+function Account() {
+  const { session, ready } = useSession()
+  const isAdmin = useIsAdmin(session)
+  const [error, setError] = useState<string | null>(null)
+
+  if (!supabase || !ready) return null
+
+  if (!session) {
+    return (
+      <div className="flex items-center gap-3">
+        <button
+          onClick={async () => {
+            const res = await signInWithDiscord('/')
+            if (res?.error) setError(res.error.message)
+          }}
+          className="hidden rounded-[10px] border border-edge bg-panel px-3.5 py-2.5 text-sm font-semibold text-body transition hover:border-[#5865f2] hover:text-white sm:block"
+        >
+          Entrar com Discord
+        </button>
+        {error && <span className="text-xs text-red-400">{error}</span>}
+      </div>
+    )
+  }
+
+  const name =
+    (session.user.user_metadata?.full_name as string | undefined) ??
+    (session.user.user_metadata?.name as string | undefined) ??
+    session.user.email
+
+  return (
+    <div className="hidden items-center gap-3 text-sm sm:flex">
+      {isAdmin && (
+        <Link to="/admin" className="font-semibold text-accent hover:underline">
+          Painel
+        </Link>
+      )}
+      <span className="max-w-[16ch] truncate text-muted">{name}</span>
+      <button onClick={() => void signOut()} className="text-muted hover:text-[#e8eaf0]">
+        Sair
+      </button>
+    </div>
+  )
+}
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  return (
+    <details className="group rounded-2xl border border-edge bg-panel px-6 py-5 transition hover:border-[#3a4256] open:border-accent/40">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[16px] font-semibold marker:content-none">
+        {q}
+        <span className="flex-none text-accent transition-transform duration-300 group-open:rotate-45">
+          +
+        </span>
+      </summary>
+      <p className="mt-3 text-sm leading-relaxed text-muted">{a}</p>
+    </details>
+  )
+}
+
 export default function Landing() {
   useReveal()
   const slotsLeft = useFounderSlotsLeft()
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-edge bg-ink/80 px-5 py-4 backdrop-blur-md sm:px-10 lg:px-16">
+      <Aurora />
+
+      <nav className="sticky top-0 z-50 flex items-center justify-between gap-4 border-b border-edge bg-ink/80 px-5 py-4 backdrop-blur-md sm:px-10 lg:px-16">
         <div className="flex items-center gap-2.5">
           <img src={AVATAR} alt="" className="h-[34px] w-[34px] rounded-[10px] border border-edge" />
           <span className="text-lg font-extrabold tracking-tight">Valdez</span>
         </div>
-        <a
-          href={INVITE_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="rounded-[10px] bg-accent px-4.5 py-2.5 text-sm font-bold text-white shadow-[0_0_24px_rgba(255,77,61,0.35)] transition hover:bg-accent-soft"
-        >
-          Adicionar ao Discord
-        </a>
+        <div className="hidden items-center gap-7 text-sm text-muted md:flex">
+          <a href="#como-funciona" className="hover:text-[#e8eaf0]">
+            Como funciona
+          </a>
+          <a href="#planos" className="hover:text-[#e8eaf0]">
+            Planos
+          </a>
+          <a href="#faq" className="hover:text-[#e8eaf0]">
+            Dúvidas
+          </a>
+        </div>
+        <div className="flex items-center gap-3">
+          <Account />
+          <a
+            href={INVITE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-[10px] bg-accent px-4.5 py-2.5 text-sm font-bold text-white shadow-[0_0_24px_rgba(255,77,61,0.35)] transition hover:bg-accent-soft"
+          >
+            Adicionar ao Discord
+          </a>
+        </div>
       </nav>
 
       <header className="relative mx-auto max-w-[1200px] px-5 pt-14 pb-10 sm:px-10 lg:px-16 lg:pt-24">
@@ -205,10 +391,7 @@ export default function Landing() {
           </h1>
           <p className="m-0 max-w-[52ch] text-[clamp(16px,2.2vw,20px)] leading-relaxed text-pretty text-muted">
             O Valdez fica na call gravando os últimos minutos em loop. Alguém soltou a pérola?{' '}
-            <code className="rounded-md border border-edge bg-panel px-2 py-0.5 font-mono text-[#e8eaf0]">
-              /clip
-            </code>{' '}
-            e o áudio cai no canal. Um botão de replay da vida real.
+            <Cmd>/clip</Cmd> e o áudio cai no canal em MP3. Um botão de replay da vida real.
           </p>
           <div className="flex flex-wrap justify-center gap-3.5">
             <Cta>Adicionar ao Discord</Cta>
@@ -216,15 +399,124 @@ export default function Landing() {
               href="#planos"
               className="inline-block rounded-xl border border-edge bg-panel px-7 py-4 text-[17px] font-semibold transition hover:border-[#3a4256] hover:text-white"
             >
-{TRIAL_DAYS} dias do {TRIAL_PLAN}, sem cartão
+              Ver planos
             </a>
+          </div>
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 font-mono text-xs text-muted">
+            <span>✓ {TRIAL_DAYS} dias do {TRIAL_PLAN}, completo</span>
+            <span>✓ Sem cartão</span>
+            <span>✓ Sai quando quiser</span>
+            <span>✓ Leva 30 segundos</span>
           </div>
         </div>
 
         <WaveformDemo />
       </header>
 
-      <section className="reveal mx-auto my-14 max-w-[900px] px-5 sm:px-10 lg:px-16">
+      <div className="relative overflow-hidden border-y border-edge bg-panel/40 py-3.5">
+        <div className="flex w-max animate-[marquee_28s_linear_infinite] gap-10 font-mono text-sm text-muted">
+          {[...COMMANDS, ...COMMANDS, ...COMMANDS, ...COMMANDS].map((c, i) => (
+            <span key={i} className="flex items-center gap-10 whitespace-nowrap">
+              {c}
+              <span className="text-accent/50">·</span>
+            </span>
+          ))}
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-[linear-gradient(90deg,var(--color-ink),transparent)]" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-[linear-gradient(270deg,var(--color-ink),transparent)]" />
+      </div>
+
+      <Reveal as="section" className="mx-auto my-20 max-w-[1000px] px-5 sm:px-10 lg:px-16">
+        <h2 className="m-0 mb-3 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
+          Toda call boa tem um momento que ninguém consegue repetir.
+        </h2>
+        <p className="mx-auto m-0 mb-10 max-w-[54ch] text-center text-[15px] text-muted">
+          E aí vem sempre a mesma cena.
+        </p>
+        <div className="grid gap-4.5 sm:grid-cols-3">
+          {PAINS.map((p, i) => (
+            <Reveal key={p.t} delay={i * 90}>
+              <div className="h-full rounded-2xl border border-edge bg-panel/60 p-6.5">
+                <div className="mb-2 text-[17px] font-bold text-body">{p.t}</div>
+                <div className="text-sm leading-relaxed text-muted">{p.d}</div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+        <p className="mx-auto mt-10 max-w-[46ch] text-center text-[clamp(18px,2.6vw,24px)] font-semibold leading-snug tracking-[-0.02em]">
+          O problema nunca foi <span className="text-muted line-through">gravar</span>. Foi{' '}
+          <span className="text-accent">achar</span>.
+        </p>
+      </Reveal>
+
+      <Reveal
+        as="section"
+        className="mx-auto my-20 max-w-[1100px] scroll-mt-24 px-5 sm:px-10 lg:px-16"
+      >
+        <div id="como-funciona" />
+        <h2 className="m-0 mb-9 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
+          Três passos. Zero configuração.
+        </h2>
+        <div className="grid gap-4.5 sm:grid-cols-3">
+          {STEPS.map((s, i) => (
+            <Reveal key={s.n} delay={i * 90}>
+              <Spotlight className="h-full rounded-2xl border border-edge bg-panel p-6.5 transition hover:-translate-y-1 hover:border-accent hover:shadow-[0_12px_40px_rgba(255,77,61,0.12)]">
+                <div className="mb-3 font-mono text-[13px] text-accent">{s.n}</div>
+                <div className="mb-2 text-lg font-bold">{s.t}</div>
+                <div className="text-sm leading-relaxed text-muted">{s.d}</div>
+              </Spotlight>
+            </Reveal>
+          ))}
+        </div>
+      </Reveal>
+
+      <section className="mx-auto my-20 grid max-w-[1100px] gap-4.5 px-5 sm:px-10 md:grid-cols-3 lg:px-16">
+        {FEATURES.map((f, i) => (
+          <Reveal key={f.t} delay={(i % 3) * 90}>
+            <Spotlight className="h-full rounded-2xl border border-edge bg-panel p-7 transition hover:-translate-y-1 hover:border-[#3a4256]">
+              <div className="mb-3 text-[26px]">{f.icon}</div>
+              <h3 className="m-0 mb-2 text-xl font-bold">{f.t}</h3>
+              <p className="m-0 text-sm leading-relaxed text-muted">{f.d}</p>
+            </Spotlight>
+          </Reveal>
+        ))}
+      </section>
+
+      <Reveal as="section" className="mx-auto my-24 max-w-[900px] px-5 sm:px-10 lg:px-16">
+        <h2 className="m-0 mb-9 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
+          Por que não resolver do jeito de sempre?
+        </h2>
+        <div className="overflow-hidden rounded-2xl border border-edge">
+          <table className="w-full text-sm">
+            <thead className="bg-panel text-left">
+              <tr className="text-xs uppercase tracking-wide text-muted">
+                <th className="px-4 py-4 font-semibold">&nbsp;</th>
+                <th className="px-4 py-4 font-semibold">Não gravar</th>
+                <th className="px-4 py-4 font-semibold">Gravar a call inteira</th>
+                <th className="px-4 py-4 font-semibold text-accent">Valdez</th>
+              </tr>
+            </thead>
+            <tbody className="bg-panel/40">
+              {[
+                ['Salvar depois que a frase passou', '✕', '✓', '✓'],
+                ['Achar o momento sem garimpar', '✕', '✕', '✓'],
+                ['Todo mundo sabe que tá gravando', '—', 'depende', '✓ sempre'],
+                ['Sai pronto pra mandar no zap', '✕', '✕', '✓ MP3'],
+                ['Custo por mês', 'R$ 0', 'seu tempo', `R$ ${PLANS[0].price}+`],
+              ].map((row) => (
+                <tr key={row[0]} className="border-t border-edge">
+                  <td className="px-4 py-3.5 text-body">{row[0]}</td>
+                  <td className="px-4 py-3.5 text-muted">{row[1]}</td>
+                  <td className="px-4 py-3.5 text-muted">{row[2]}</td>
+                  <td className="px-4 py-3.5 font-semibold text-accent">{row[3]}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Reveal>
+
+      <Reveal as="section" className="mx-auto my-14 max-w-[900px] px-5 sm:px-10 lg:px-16">
         <div className="relative overflow-hidden rounded-[20px] border border-accent/50 bg-[linear-gradient(135deg,rgba(255,77,61,0.12),#12151d_55%)] p-7 sm:p-11">
           <div className="absolute top-0 left-0 h-0.5 w-2/5 animate-[sweep_3.2s_linear_infinite] bg-[linear-gradient(90deg,transparent,#ff4d3d,transparent)]" />
           <div className="flex flex-wrap items-center justify-between gap-7">
@@ -237,14 +529,15 @@ export default function Landing() {
                 sempre.
               </h2>
               <p className="m-0 text-[15px] leading-relaxed text-muted">
-                Depois disso o preço sobe e não volta. Sem countdown falso — quando as vagas
-                acabarem, acabou.
+                O Valdez é novo e eu prefiro ser honesto sobre isso: os primeiros servidores entram
+                pagando pouco porque estão apostando cedo. Depois o preço sobe e não volta. Sem
+                countdown falso — quando as vagas acabarem, acabou.
               </p>
             </div>
             {slotsLeft !== null && (
               <div className="flex-none text-center">
                 <div className="text-[clamp(48px,8vw,72px)] font-extrabold leading-none tracking-[-0.04em] text-accent [text-shadow:0_0_40px_rgba(255,77,61,0.4)]">
-                  {slotsLeft}
+                  <CountUp to={slotsLeft} />
                 </div>
                 <div className="mt-1.5 font-mono text-xs text-muted">
                   vagas restantes de {FOUNDER_SLOTS}
@@ -253,167 +546,164 @@ export default function Landing() {
             )}
           </div>
         </div>
-      </section>
+      </Reveal>
 
-      <section className="reveal mx-auto my-20 max-w-[1100px] px-5 sm:px-10 lg:px-16">
-        <h2 className="m-0 mb-9 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
-          Três passos. Zero configuração.
-        </h2>
-        <div className="grid gap-4.5 sm:grid-cols-3">
-          {STEPS.map((s) => (
-            <div
-              key={s.n}
-              className="rounded-2xl border border-edge bg-panel p-6.5 transition hover:-translate-y-1 hover:border-accent hover:shadow-[0_12px_40px_rgba(255,77,61,0.12)]"
-            >
-              <div className="mb-3 font-mono text-[13px] text-accent">{s.n}</div>
-              <div className="mb-2 text-lg font-bold">{s.t}</div>
-              <div className="text-sm leading-relaxed text-muted">{s.d}</div>
-            </div>
+      <section id="planos" className="mx-auto my-24 max-w-[1150px] scroll-mt-24 px-5 sm:px-10 lg:px-16">
+        <Reveal>
+          <h2 className="m-0 mb-2 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
+            Um preço. O servidor inteiro usa.
+          </h2>
+          <p className="mx-auto m-0 mb-10 max-w-[54ch] text-center text-[15px] text-muted">
+            Quem paga é você, dono do servidor — nunca cada membro. Todo servidor começa com{' '}
+            <strong className="text-body">
+              {TRIAL_DAYS} dias do {TRIAL_PLAN}
+            </strong>
+            , o plano do meio, liberado por inteiro e sem cartão. O teste vale uma vez por servidor e
+            uma vez por dono.
+          </p>
+        </Reveal>
+        <div className="grid items-stretch gap-4.5 sm:grid-cols-3">
+          {PLANS.map((plan, i) => (
+            <Reveal key={plan.id} delay={i * 90}>
+              <div
+                className={`relative flex h-full flex-col rounded-[18px] border bg-panel px-6.5 py-7 transition hover:-translate-y-1.5 ${
+                  plan.highlight
+                    ? 'border-accent shadow-[0_0_50px_rgba(255,77,61,0.18)]'
+                    : 'border-edge'
+                }`}
+              >
+                {plan.highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-1 text-[11px] font-bold tracking-wide whitespace-nowrap text-white">
+                    MAIS USADO
+                  </div>
+                )}
+                <div className="text-lg font-bold">{plan.label}</div>
+                <div className="mt-3.5 mb-1 flex items-baseline gap-1.5">
+                  <span className="text-[40px] font-extrabold tracking-[-0.03em]">
+                    R$ {plan.price}
+                  </span>
+                  <span className="text-sm text-muted">/mês</span>
+                </div>
+                <div className="mb-5 text-[13px] italic text-muted">{plan.tagline}</div>
+                <div className="flex flex-1 flex-col gap-2.5">
+                  {plan.features.map((f) => (
+                    <div key={f} className="flex gap-2.5 text-sm leading-snug text-body">
+                      <span className="flex-none text-accent">✓</span>
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 border-t border-edge pt-4 text-[13px] text-muted">
+                  {plan.support}
+                </div>
+                <a
+                  href={INVITE_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`mt-6 rounded-[10px] border py-3.5 text-center text-[15px] font-bold transition hover:opacity-85 ${
+                    plan.highlight
+                      ? 'border-accent bg-accent text-white'
+                      : 'border-[#3a4256] bg-panel text-[#e8eaf0]'
+                  }`}
+                >
+                  Começar com {TRIAL_DAYS} dias do {TRIAL_PLAN}
+                </a>
+              </div>
+            </Reveal>
           ))}
         </div>
-      </section>
 
-      <section className="reveal mx-auto my-20 grid max-w-[1100px] gap-4.5 px-5 sm:px-10 md:grid-cols-3 lg:px-16">
-        <div className="rounded-2xl border border-edge bg-panel p-7">
-          <div className="mb-3 text-[26px]">🏆</div>
-          <h3 className="m-0 mb-2 text-xl font-bold">Quem vive na call sobe de nível.</h3>
-          <p className="m-0 text-sm leading-relaxed text-muted">
-            Cada minuto em call vira XP. Vira nível. Vira posição no{' '}
-            <code className="rounded-md border border-edge bg-ink px-2 py-0.5 font-mono text-[#e8eaf0]">
-              /leaderboard
-            </code>{' '}
-            do servidor. Aquele amigo que passa a madrugada online finalmente tem onde provar isso.
-          </p>
-        </div>
-        <div className="rounded-2xl border border-edge bg-panel p-7">
-          <div className="mb-3 text-[26px]">⏱️</div>
-          <h3 className="m-0 mb-2 text-xl font-bold">O contador de horas fica na call.</h3>
-          <p className="m-0 text-sm leading-relaxed text-muted">
-            Quem quiser deixa o contador ligado e ele fica lá, ao vivo, somando o tempo de cada um na
-            call. Quem não quiser desliga e usa{' '}
-            <code className="rounded-md border border-edge bg-ink px-2 py-0.5 font-mono text-[#e8eaf0]">
-              /horas
-            </code>{' '}
-            só quando pedir.
-          </p>
-        </div>
-        <div className="rounded-2xl border border-edge bg-panel p-7">
-          <div className="mb-3 text-[26px]">🎧</div>
-          <h3 className="m-0 mb-2 text-xl font-bold">Sai MP3, não sai formato estranho.</h3>
-          <p className="m-0 text-sm leading-relaxed text-muted">
-            O clipe chega como MP3 no canal. Baixa e toca em qualquer celular, manda no zap, joga no
-            vídeo. Nada de arquivo que só abre em programa de nerd.
-          </p>
-        </div>
-        <div className="rounded-2xl border border-edge bg-panel p-7">
-          <div className="mb-3 text-[26px]">🎵</div>
-          <h3 className="m-0 mb-2 text-xl font-bold">Toca música também.</h3>
-          <p className="m-0 text-sm leading-relaxed text-muted">
-            <code className="rounded-md border border-edge bg-ink px-2 py-0.5 font-mono text-[#e8eaf0]">
-              /play
-            </code>{' '}
-            com link do YouTube, do Spotify ou só o nome da faixa. É um bot a menos pra manter no
-            servidor.
-          </p>
-        </div>
-        <div className="rounded-2xl border border-edge bg-panel p-7">
-          <div className="mb-3 text-[26px]">🛡️</div>
-          <h3 className="m-0 mb-2 text-xl font-bold">O clipe é seu. O resto morre.</h3>
-          <p className="m-0 text-sm leading-relaxed text-muted">
-            O bot avisa <span className="font-bold text-accent">[REC]</span> no canal e qualquer
-            membro pode dar opt-out. O áudio fica só no seu canal do Discord — o Valdez não guarda
-            nada em lugar nenhum. Privacidade não é letra miúda aqui, é feature.
-          </p>
-        </div>
-        <div className="rounded-2xl border border-edge bg-panel p-7">
-          <div className="mb-3 text-[26px]">💬</div>
-          <h3 className="m-0 mb-2 text-xl font-bold">Tem gente do outro lado.</h3>
-          <p className="m-0 text-sm leading-relaxed text-muted">
-            Bug ou dúvida: no Básico você abre um ticket aqui no site, no Pro fala comigo direto no
-            Discord e no Máximo tem meu WhatsApp. Não existe robô de atendimento no meio.
-          </p>
-        </div>
-      </section>
-
-      <section
-        id="planos"
-        className="reveal mx-auto my-24 max-w-[1150px] px-5 sm:px-10 lg:px-16"
-      >
-        <h2 className="m-0 mb-2 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
-          Planos
-        </h2>
-        <p className="mx-auto m-0 mb-10 max-w-[52ch] text-center text-[15px] text-muted">
-          Todo servidor começa com <strong className="text-body">{TRIAL_DAYS} dias do {TRIAL_PLAN}</strong>, o plano
-          do meio, liberado por inteiro e sem cartão. O teste vale uma vez por servidor e uma vez por
-          dono — criar servidor novo não reseta.
-        </p>
-        <div className="grid items-stretch gap-4.5 sm:grid-cols-3">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative flex flex-col rounded-[18px] border bg-panel px-6.5 py-7 transition hover:-translate-y-1.5 ${
-                plan.highlight
-                  ? 'border-accent shadow-[0_0_50px_rgba(255,77,61,0.18)]'
-                  : 'border-edge'
-              }`}
-            >
-              {plan.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-1 text-[11px] font-bold tracking-wide whitespace-nowrap text-white">
-                  MAIS USADO
+        <Reveal delay={120}>
+          <div className="mt-4.5 flex flex-wrap items-center gap-8 rounded-[18px] border border-[#5865f2]/45 bg-[linear-gradient(120deg,rgba(88,101,242,0.12),#12151d_60%)] px-6.5 py-7 sm:px-9">
+            <div className="min-w-[240px] flex-1">
+              <div className="mb-2 font-mono text-xs tracking-[0.1em] text-[#7aa7ff]">
+                PAGAMENTO ÚNICO
+              </div>
+              <h3 className="m-0 mb-2 text-[clamp(21px,3vw,29px)] font-extrabold tracking-[-0.02em]">
+                {LIFETIME.label} — R$ {LIFETIME.price}, e acabou.
+              </h3>
+              <p className="m-0 max-w-[46ch] text-sm leading-relaxed text-muted">
+                {LIFETIME.tagline} São {LIFETIME.monthsToBreakEven} meses de {LIFETIME.equivalentTo}{' '}
+                pagos de uma vez — do sexto mês em diante o Valdez é seu de graça, pra sempre.{' '}
+                <strong className="text-body">Só {LIFETIME.slots} servidores</strong> podem pegar
+                isso.
+              </p>
+            </div>
+            <div className="grid min-w-[220px] flex-1 gap-2.5">
+              {LIFETIME.features.map((f) => (
+                <div key={f} className="flex gap-2.5 text-sm leading-snug text-body">
+                  <span className="flex-none text-[#7aa7ff]">✓</span>
+                  <span>{f}</span>
                 </div>
-              )}
-              <div className="text-lg font-bold">{plan.label}</div>
-              <div className="mt-3.5 mb-1 flex items-baseline gap-1.5">
-                <span className="text-[40px] font-extrabold tracking-[-0.03em]">R$ {plan.price}</span>
-                <span className="text-sm text-muted">/mês</span>
-              </div>
-              <div className="mb-5 text-[13px] italic text-muted">{plan.tagline}</div>
-              <div className="flex flex-1 flex-col gap-2.5">
-                {plan.features.map((f) => (
-                  <div key={f} className="flex gap-2.5 text-sm leading-snug text-body">
-                    <span className="flex-none text-accent">✓</span>
-                    <span>{f}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-5 border-t border-edge pt-4 text-[13px] text-muted">
-                {plan.support}
-              </div>
+              ))}
               <a
                 href={INVITE_URL}
                 target="_blank"
                 rel="noreferrer"
-                className={`mt-6 rounded-[10px] border py-3.5 text-center text-[15px] font-bold transition hover:opacity-85 ${
-                  plan.highlight
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-[#3a4256] bg-panel text-[#e8eaf0]'
-                }`}
+                className="mt-2 rounded-[10px] bg-[#5865f2] py-3.5 text-center text-[15px] font-bold text-white transition hover:brightness-110"
               >
-                Começar com {TRIAL_DAYS} dias do {TRIAL_PLAN}
+                Quero o vitalício
               </a>
             </div>
-          ))}
-        </div>
+          </div>
+        </Reveal>
+
+        <Reveal delay={160}>
+          <div className="mt-9 grid gap-4.5 sm:grid-cols-3">
+            {[
+              ['Sem cartão pra testar', 'O teste não pede cartão. Se você sumir, nada é cobrado.'],
+              ['Sem fidelidade', 'Cancela quando quiser. O bot para no fim do período já pago.'],
+              [
+                'Sem perder o que já é seu',
+                'Os clipes são mensagens no seu canal. Cancelar não apaga nada.',
+              ],
+            ].map(([t, d]) => (
+              <div key={t} className="rounded-2xl border border-edge bg-panel/50 p-5">
+                <div className="mb-1.5 flex items-center gap-2 text-[15px] font-bold">
+                  <span className="text-accent">✓</span>
+                  {t}
+                </div>
+                <p className="m-0 text-sm leading-relaxed text-muted">{d}</p>
+              </div>
+            ))}
+          </div>
+        </Reveal>
       </section>
 
-      <section className="reveal mx-auto my-24 max-w-[760px] px-5 text-center sm:px-10 lg:px-16">
+      <Reveal as="section" className="mx-auto my-24 max-w-[760px] px-5 text-center sm:px-10 lg:px-16">
         <div className="mb-4 font-mono text-xs tracking-[0.1em] text-accent">POR QUE EU FIZ ISSO</div>
         <blockquote className="m-0 text-[clamp(20px,3.4vw,30px)] font-semibold leading-snug tracking-[-0.02em]">
           "Eu jogava com meus amigos e as melhores frases morriam na call. Não existia bot barato que
           gravasse voz. Então eu fiz o meu."
         </blockquote>
         <div className="mt-4 text-sm text-muted">— Samuel Stefano, criador do Valdez</div>
+      </Reveal>
+
+      <section id="faq" className="mx-auto my-24 max-w-[820px] scroll-mt-24 px-5 sm:px-10 lg:px-16">
+        <Reveal>
+          <h2 className="m-0 mb-9 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
+            O que todo mundo pergunta antes de instalar
+          </h2>
+        </Reveal>
+        <div className="grid gap-3">
+          {FAQ.map((f, i) => (
+            <Reveal key={f.q} delay={Math.min(i, 4) * 60}>
+              <FaqItem q={f.q} a={f.a} />
+            </Reveal>
+          ))}
+        </div>
       </section>
 
-      <section className="reveal mx-auto mt-24 mb-20 max-w-[800px] px-5 text-center sm:px-10 lg:px-16">
+      <Reveal as="section" className="mx-auto mt-24 mb-20 max-w-[800px] px-5 text-center sm:px-10 lg:px-16">
         <h2 className="m-0 mb-3.5 text-[clamp(30px,5vw,52px)] font-extrabold leading-[1.05] tracking-[-0.035em]">
           A próxima pérola vai rolar hoje à noite.
         </h2>
-        <p className="m-0 mb-7 text-[17px] text-muted">
-          Ou você salva, ou vira "tinha que estar lá".
-        </p>
+        <p className="m-0 mb-7 text-[17px] text-muted">Ou você salva, ou vira "tinha que estar lá".</p>
         <Cta big>Adicionar o Valdez ao Discord</Cta>
-      </section>
+        <p className="mt-4 font-mono text-xs text-muted">
+          {TRIAL_DAYS} dias do {TRIAL_PLAN} · sem cartão · sai quando quiser
+        </p>
+      </Reveal>
 
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-edge px-5 py-7 text-[13px] text-muted sm:px-10 lg:px-16">
         <span>© {new Date().getFullYear()} Valdez · feito por Samuel Stefano</span>
