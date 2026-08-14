@@ -31,6 +31,7 @@ export const PLANS: Plan[] = [
       'Clip de até 15 minutos',
       'Gravação contínua (/replay)',
       'Canal dedicado de clipes',
+      'Contador de horas ao vivo na call',
       'Ranking de horas em call',
     ],
   },
@@ -48,6 +49,6 @@ export const PLANS: Plan[] = [
   },
 ]
 
-export const TRIAL_DAYS = 14
+export const TRIAL_DAYS = 3
 export const FOUNDER_PRICE = 10
 export const FOUNDER_SLOTS = 100
