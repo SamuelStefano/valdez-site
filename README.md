@@ -1,32 +1,37 @@
-# React + TypeScript + Vite
+# valdez-site
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Landing page pública + painel de administrador do bot Valdez.
 
-Currently, two official plugins are available:
+- `/` — landing (história, como funciona, planos)
+- `/privacidade` e `/termos` — obrigatórios para bot público que captura voz
+- `/admin` — painel: MRR, servidores, clipes, feedback, estabilidade
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Deploy (Vercel)
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+vercel login          # precisa da sua conta
+vercel link
+vercel --prod
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`vercel.json` já reescreve tudo para `index.html` (SPA).
+
+## Variáveis de ambiente (Vercel → Settings → Environment Variables)
+
+| Variável | Para quê | Obrigatória |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | painel lê os dados | só para `/admin` |
+| `VITE_SUPABASE_ANON_KEY` | idem | só para `/admin` |
+| `VITE_INVITE_URL` | sobrescreve o convite padrão do bot | não |
+| `VITE_SUPPORT_URL` | link do servidor de suporte no rodapé | não |
+| `VITE_CONTACT_EMAIL` | e-mail nas páginas legais | não |
+
+Nunca colocar a `service_role` aqui — ela vive só no bot. O painel usa a chave
+anon e depende da RLS: quem não estiver em `valdez.admins` faz login e não lê
+nada.
+
+## Antes do painel funcionar
+
+1. Expor o schema `valdez` na API do projeto Supabase (Settings → API → Exposed schemas).
+2. Inserir seu `auth.uid()` em `valdez.admins`.
+3. Adicionar a URL do site em Authentication → URL Configuration (redirect do magic link).

@@ -1,7 +1,13 @@
 import { Link } from 'react-router-dom'
 import { PLANS, TRIAL_DAYS, FOUNDER_PRICE, FOUNDER_SLOTS } from '../lib/plans'
 
-const INVITE_URL = import.meta.env.VITE_INVITE_URL as string | undefined
+// client_id é público por definição. As permissões são o mínimo que o bot usa:
+// ver canal, mandar mensagem, anexar arquivo, entrar/falar na call e mudar o
+// próprio apelido (o [REC] de consentimento).
+const DEFAULT_INVITE =
+  'https://discord.com/oauth2/authorize?client_id=1365865955925819546&permissions=70306816&scope=bot%20applications.commands'
+
+const INVITE_URL = (import.meta.env.VITE_INVITE_URL as string | undefined) ?? DEFAULT_INVITE
 const SUPPORT_URL = import.meta.env.VITE_SUPPORT_URL as string | undefined
 
 function Cta({ className = '' }: { className?: string }) {
