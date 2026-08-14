@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PLANS, TRIAL_DAYS, FOUNDER_PRICE, FOUNDER_SLOTS } from '../lib/plans'
+import { PLANS, TRIAL_DAYS, TRIAL_PLAN, FOUNDER_PRICE, FOUNDER_SLOTS } from '../lib/plans'
 import { supabase } from '../lib/supabase'
 
 // client_id é público por definição. As permissões são o mínimo que o bot usa:
@@ -216,7 +216,7 @@ export default function Landing() {
               href="#planos"
               className="inline-block rounded-xl border border-edge bg-panel px-7 py-4 text-[17px] font-semibold transition hover:border-[#3a4256] hover:text-white"
             >
-              {TRIAL_DAYS} dias grátis, sem cartão
+{TRIAL_DAYS} dias do {TRIAL_PLAN}, sem cartão
             </a>
           </div>
         </div>
@@ -275,14 +275,14 @@ export default function Landing() {
 
       <section className="reveal mx-auto my-20 grid max-w-[1100px] gap-4.5 px-5 sm:px-10 md:grid-cols-3 lg:px-16">
         <div className="rounded-2xl border border-edge bg-panel p-7">
-          <div className="mb-3 text-[26px]">🎵</div>
-          <h3 className="m-0 mb-2 text-xl font-bold">Também toca música. De verdade.</h3>
+          <div className="mb-3 text-[26px]">🏆</div>
+          <h3 className="m-0 mb-2 text-xl font-bold">Quem vive na call sobe de nível.</h3>
           <p className="m-0 text-sm leading-relaxed text-muted">
+            Cada minuto em call vira XP. Vira nível. Vira posição no{' '}
             <code className="rounded-md border border-edge bg-ink px-2 py-0.5 font-mono text-[#e8eaf0]">
-              /play
+              /leaderboard
             </code>{' '}
-            por link ou busca. Porque os outros bots de música ou são pagos ou são ruins — e você já
-            está pagando este aqui.
+            do servidor. Aquele amigo que passa a madrugada online finalmente tem onde provar isso.
           </p>
         </div>
         <div className="rounded-2xl border border-edge bg-panel p-7">
@@ -294,7 +294,26 @@ export default function Landing() {
             <code className="rounded-md border border-edge bg-ink px-2 py-0.5 font-mono text-[#e8eaf0]">
               /horas
             </code>{' '}
-            só quando pedir. O ranking do servidor sai de graça no fim.
+            só quando pedir.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-edge bg-panel p-7">
+          <div className="mb-3 text-[26px]">🎧</div>
+          <h3 className="m-0 mb-2 text-xl font-bold">Sai MP3, não sai formato estranho.</h3>
+          <p className="m-0 text-sm leading-relaxed text-muted">
+            O clipe chega como MP3 no canal. Baixa e toca em qualquer celular, manda no zap, joga no
+            vídeo. Nada de arquivo que só abre em programa de nerd.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-edge bg-panel p-7">
+          <div className="mb-3 text-[26px]">🎵</div>
+          <h3 className="m-0 mb-2 text-xl font-bold">Toca música também.</h3>
+          <p className="m-0 text-sm leading-relaxed text-muted">
+            <code className="rounded-md border border-edge bg-ink px-2 py-0.5 font-mono text-[#e8eaf0]">
+              /play
+            </code>{' '}
+            com link do YouTube, do Spotify ou só o nome da faixa. É um bot a menos pra manter no
+            servidor.
           </p>
         </div>
         <div className="rounded-2xl border border-edge bg-panel p-7">
@@ -306,6 +325,14 @@ export default function Landing() {
             nada em lugar nenhum. Privacidade não é letra miúda aqui, é feature.
           </p>
         </div>
+        <div className="rounded-2xl border border-edge bg-panel p-7">
+          <div className="mb-3 text-[26px]">💬</div>
+          <h3 className="m-0 mb-2 text-xl font-bold">Tem gente do outro lado.</h3>
+          <p className="m-0 text-sm leading-relaxed text-muted">
+            Bug ou dúvida: no Básico você abre um ticket aqui no site, no Pro fala comigo direto no
+            Discord e no Máximo tem meu WhatsApp. Não existe robô de atendimento no meio.
+          </p>
+        </div>
       </section>
 
       <section
@@ -315,9 +342,10 @@ export default function Landing() {
         <h2 className="m-0 mb-2 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
           Planos
         </h2>
-        <p className="mx-auto m-0 mb-10 max-w-[46ch] text-center text-[15px] text-muted">
-          {TRIAL_DAYS} dias grátis em qualquer plano. Sem cartão. O teste vale uma vez por servidor e
-          uma vez por dono — criar servidor novo não reseta.
+        <p className="mx-auto m-0 mb-10 max-w-[52ch] text-center text-[15px] text-muted">
+          Todo servidor começa com <strong className="text-body">{TRIAL_DAYS} dias do {TRIAL_PLAN}</strong>, o plano
+          do meio, liberado por inteiro e sem cartão. O teste vale uma vez por servidor e uma vez por
+          dono — criar servidor novo não reseta.
         </p>
         <div className="grid items-stretch gap-4.5 sm:grid-cols-3">
           {PLANS.map((plan) => (
@@ -348,6 +376,9 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
+              <div className="mt-5 border-t border-edge pt-4 text-[13px] text-muted">
+                {plan.support}
+              </div>
               <a
                 href={INVITE_URL}
                 target="_blank"
@@ -358,7 +389,7 @@ export default function Landing() {
                     : 'border-[#3a4256] bg-panel text-[#e8eaf0]'
                 }`}
               >
-                Começar {TRIAL_DAYS} dias grátis
+                Começar com {TRIAL_DAYS} dias do {TRIAL_PLAN}
               </a>
             </div>
           ))}

@@ -58,46 +58,52 @@ interface Data {
 const brl = (cents: number) => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const day = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 
+// Senha, não link mágico: o SMTP nativo do Supabase corta em 2 e-mails por hora
+// e trancava o dono do painel do lado de fora.
 function Login() {
   const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function send(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    const { error } = await supabase!.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.href },
-    })
+    setBusy(true)
+    const { error } = await supabase!.auth.signInWithPassword({ email, password })
+    setBusy(false)
     if (error) setError(error.message)
-    else setSent(true)
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center px-5">
       <form onSubmit={send} className="w-full max-w-sm rounded-xl border border-edge bg-panel p-8">
         <h1 className="text-xl font-bold">Painel do Valdez</h1>
-        <p className="mt-2 text-sm text-white/50">Mandamos um link de acesso pro seu e-mail.</p>
-        {sent ? (
-          <p className="mt-6 rounded-lg border border-accent/40 bg-accent/10 p-4 text-sm">
-            Link enviado. Abra o e-mail nesta mesma aba.
-          </p>
-        ) : (
-          <>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="voce@email.com"
-              className="mt-6 w-full rounded-lg border border-edge bg-ink px-4 py-3 text-sm outline-none focus:border-accent"
-            />
-            <button className="mt-3 w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold transition hover:brightness-110">
-              Entrar
-            </button>
-          </>
-        )}
+        <p className="mt-2 text-sm text-white/50">Acesso restrito.</p>
+        <input
+          type="email"
+          required
+          autoComplete="username"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="voce@email.com"
+          className="mt-6 w-full rounded-lg border border-edge bg-ink px-4 py-3 text-sm outline-none focus:border-accent"
+        />
+        <input
+          type="password"
+          required
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="senha"
+          className="mt-3 w-full rounded-lg border border-edge bg-ink px-4 py-3 text-sm outline-none focus:border-accent"
+        />
+        <button
+          disabled={busy}
+          className="mt-3 w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold transition hover:brightness-110 disabled:opacity-50"
+        >
+          {busy ? 'Entrando...' : 'Entrar'}
+        </button>
         {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
       </form>
     </div>
