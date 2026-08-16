@@ -17,9 +17,9 @@ export const PLANS: Plan[] = [
     support: 'Ticket pelo site',
     features: [
       'Clip dos últimos 1min30',
+      'Música por link ou nome',
       'MP3 pronto pra baixar',
       'XP, níveis e ranking de call',
-      'Música por link ou busca',
       'Opt-out por membro',
     ],
   },
@@ -32,8 +32,9 @@ export const PLANS: Plan[] = [
     highlight: true,
     features: [
       'Clip dos últimos 15 minutos',
-      'Gravação contínua (/replay)',
+      'Playlist e álbum inteiros',
       'Contador de horas ao vivo na call',
+      'Gravação contínua (/replay)',
       'Canal dedicado de clipes',
       'Tudo do Básico',
     ],
@@ -45,6 +46,8 @@ export const PLANS: Plan[] = [
     tagline: 'Call longa, raid, campeonato, podcast.',
     support: 'Suporte no WhatsApp',
     features: [
+      'Clip da voz de UMA pessoa só',
+      'Retrospectiva semanal do servidor',
       'Clip dos últimos 30 minutos',
       'Prioridade em bug e pedido novo',
       'Tudo do Pro',
@@ -63,8 +66,8 @@ export const FREE = {
   features: [
     'Clip dos últimos 30 segundos',
     'MP3 pronto pra baixar',
+    'XP, níveis e ranking de call',
     'Sem limite de tempo, sem cartão',
-    'Música por link ou busca',
   ],
 }
 

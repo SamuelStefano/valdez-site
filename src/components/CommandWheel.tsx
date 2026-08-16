@@ -1,12 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 
+type Tier = 'Grátis' | 'Básico' | 'Pro' | 'Máximo'
+
 interface Command {
   cmd: string
   args?: string
   title: string
   desc: string
   who: string
-  tier: 'Grátis' | 'Pro'
+  tier: Tier
+}
+
+// O rótulo é "a partir de" porque o plano de cima sempre herda o de baixo: dizer
+// "no Básico" faria quem já é Pro achar que perdeu o comando.
+const TIER_BADGE: Record<Tier, string> = {
+  'Grátis': 'NO GRÁTIS',
+  'Básico': 'DO BÁSICO PRA CIMA',
+  'Pro': 'DO PRO PRA CIMA',
+  'Máximo': 'SÓ NO MÁXIMO',
 }
 
 // A fonte é o bot: cada entrada existe em src/commands/ e o tier é o gate real
@@ -15,9 +26,9 @@ interface Command {
 const COMMANDS: Command[] = [
   {
     cmd: '/clip',
-    args: '[duração]',
+    args: '[duração] [pessoa]',
     title: 'Salva o que acabou de acontecer',
-    desc: 'Pega os últimos minutos da call e joga no canal de texto em MP3. Sem duração, volta 2 minutos. O teto é o do seu plano.',
+    desc: 'Pega os últimos minutos da call e joga no canal de texto em MP3. Sem duração, volta 2 minutos. No Máximo dá pra pedir a voz de uma pessoa só, sem o resto da call por cima.',
     who: 'Qualquer um na call',
     tier: 'Grátis',
   },
@@ -32,17 +43,17 @@ const COMMANDS: Command[] = [
     cmd: '/play',
     args: '<link ou nome>',
     title: 'Toca música na call',
-    desc: 'Link do YouTube, do Spotify ou só o nome da faixa. Um bot a menos pra convidar no servidor.',
+    desc: 'Link do YouTube, do Spotify ou só o nome da faixa — isso já vem no Básico. Playlist e álbum inteiros entram no Pro. Um bot a menos pra convidar no servidor.',
     who: 'Qualquer um na call',
-    tier: 'Grátis',
+    tier: 'Básico',
   },
   {
     cmd: '/music',
-    args: 'skip · pause · stop',
+    args: 'skip · pause · queue',
     title: 'Controla o que está tocando',
-    desc: 'Pula, pausa, volta pra anterior ou para tudo e limpa a fila.',
+    desc: 'Pula, pausa, volta pra anterior, mostra a fila ou para tudo. Tem também os botões no canal, pra ninguém precisar digitar.',
     who: 'Qualquer um na call',
-    tier: 'Grátis',
+    tier: 'Básico',
   },
   {
     cmd: '/horas',
@@ -228,7 +239,7 @@ export function CommandWheel() {
                   : 'border-accent/50 text-accent'
               }`}
             >
-              {current.tier === 'Grátis' ? 'NO GRÁTIS' : 'PRO PRA CIMA'}
+              {TIER_BADGE[current.tier]}
             </span>
           </div>
 

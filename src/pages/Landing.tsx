@@ -121,8 +121,8 @@ const FEATURES = [
     t: 'E toca música, de quebra.',
     d: (
       <>
-        <Cmd>/play</Cmd> com link do YouTube, do Spotify ou só o nome da faixa. Um bot a menos pra
-        manter no servidor.
+        <Cmd>/play</Cmd> com link do YouTube, do Spotify ou só o nome da faixa já no Básico —
+        playlist e álbum inteiros no Pro. Um bot a menos pra manter no servidor.
       </>
     ),
   },
