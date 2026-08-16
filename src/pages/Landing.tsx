@@ -10,6 +10,7 @@ import {
   FOUNDER_SLOTS,
 } from '../lib/plans'
 import { supabase } from '../lib/supabase'
+import type { PublicFeedback } from '../lib/metrics'
 import { useSession, useIsAdmin, signInWithDiscord, signOut } from '../lib/auth'
 import { Aurora, CountUp, Reveal, Spotlight, useReveal } from '../components/motion'
 import { CommandWheel } from '../components/CommandWheel'
@@ -43,6 +44,29 @@ function useFounderSlotsLeft() {
     }
   }, [])
   return left
+}
+
+// Depoimento aqui só existe se a pessoa marcou `publicar` no /feedback e eu
+// aprovei no painel. Enquanto não houver nenhum, a seção convida em vez de
+// inventar — este bot tem um punhado de servidores e prova social falsa some com
+// a única coisa que ele tem pra vender.
+function usePublicFeedback() {
+  const [rows, setRows] = useState<PublicFeedback[] | null>(null)
+  useEffect(() => {
+    if (!supabase) return
+    let alive = true
+    supabase
+      .from('public_feedback')
+      .select('id,username,rating,message,created_at')
+      .limit(6)
+      .then(({ data, error }) => {
+        if (alive) setRows(error ? [] : ((data ?? []) as PublicFeedback[]))
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
+  return rows
 }
 
 function Cta({ children, big = false }: { children: React.ReactNode; big?: boolean }) {
@@ -331,6 +355,55 @@ function Account() {
         Sair
       </button>
     </div>
+  )
+}
+
+function Feedbacks() {
+  const rows = usePublicFeedback()
+  if (rows === null) return null
+
+  return (
+    <section id="feedbacks" className="mx-auto my-24 max-w-[1100px] scroll-mt-24 px-5 sm:px-10 lg:px-16">
+      <Reveal>
+        <div className="mb-4 text-center font-mono text-xs tracking-[0.1em] text-accent">
+          QUEM USA
+        </div>
+        <h2 className="m-0 mb-9 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
+          {rows.length > 0 ? 'O que dizem de dentro da call' : 'Ainda não tem depoimento aqui'}
+        </h2>
+      </Reveal>
+
+      {rows.length > 0 ? (
+        <div className="grid gap-4.5 sm:grid-cols-2 lg:grid-cols-3">
+          {rows.map((f, i) => (
+            <Reveal key={f.id} delay={Math.min(i, 4) * 60}>
+              <figure className="m-0 h-full rounded-2xl border border-edge bg-panel/50 p-6">
+                {f.rating && <div className="mb-3 text-accent">{'★'.repeat(f.rating)}</div>}
+                <blockquote className="m-0 text-[15px] leading-relaxed text-[#e8eaf0]">
+                  {f.message}
+                </blockquote>
+                <figcaption className="mt-4 font-mono text-xs text-muted">
+                  @{f.username ?? 'anônimo'}
+                </figcaption>
+              </figure>
+            </Reveal>
+          ))}
+        </div>
+      ) : (
+        <Reveal>
+          <div className="mx-auto max-w-[620px] rounded-2xl border border-edge bg-panel/50 p-8 text-center">
+            <p className="m-0 text-[15px] leading-relaxed text-muted">
+              O Valdez é novo e eu não vou inventar elogio pra encher esta seção. Se você já usa,
+              manda <Cmd>/feedback</Cmd> no seu servidor e marca <strong>publicar</strong> — o que
+              você escrever aparece aqui, com seu nome do Discord e mais nada.
+            </p>
+            <p className="m-0 mt-4 text-[13px] text-muted/70">
+              Sem seu ok, nenhum recado sai do Discord.
+            </p>
+          </div>
+        </Reveal>
+      )}
+    </section>
   )
 }
 
@@ -729,6 +802,8 @@ export default function Landing() {
         </blockquote>
         <div className="mt-4 text-sm text-muted">— Samuel Stefano, criador do Valdez</div>
       </Reveal>
+
+      <Feedbacks />
 
       <section id="faq" className="mx-auto my-24 max-w-[820px] scroll-mt-24 px-5 sm:px-10 lg:px-16">
         <Reveal>

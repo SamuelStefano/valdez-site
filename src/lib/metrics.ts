@@ -34,6 +34,18 @@ export interface Feedback {
   rating: number | null
   message: string
   handled: boolean
+  can_publish: boolean
+  published: boolean
+  created_at: string
+}
+
+// A landing lê a view valdez.public_feedback, que não tem guild_id nem user_id:
+// quem visita o site não descobre em que servidor a pessoa está.
+export interface PublicFeedback {
+  id: number
+  username: string | null
+  rating: number | null
+  message: string
   created_at: string
 }
 

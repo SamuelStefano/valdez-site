@@ -519,14 +519,25 @@ function Usage({ d, m }: { d: Snapshot; m: Metrics }) {
   )
 }
 
-function FeedbackTab({ d, m }: { d: Snapshot; m: Metrics }) {
+function FeedbackTab({ d, m, reload }: { d: Snapshot; m: Metrics; reload: () => void }) {
   const [minRating, setMinRating] = useState(0)
+  const [saving, setSaving] = useState<number | null>(null)
   const rows = d.feedback.filter((f) => (f.rating ?? 0) >= minRating)
   const dist = [5, 4, 3, 2, 1].map((r) => ({
     r,
     n: d.feedback.filter((f) => f.rating === r).length,
   }))
   const maxDist = Math.max(1, ...dist.map((x) => x.n))
+
+  // `published` é a única coluna que a policy deixa eu escrever, e só vale se a
+  // pessoa marcou `publicar` no /feedback — aprovar aqui é curadoria, não permissão.
+  async function togglePublish(f: Feedback) {
+    setSaving(f.id)
+    const { error } = await supabase!.from('feedback').update({ published: !f.published }).eq('id', f.id)
+    setSaving(null)
+    if (error) alert(`Não consegui salvar: ${error.message}`)
+    else reload()
+  }
 
   return (
     <>
@@ -593,6 +604,23 @@ function FeedbackTab({ d, m }: { d: Snapshot; m: Metrics }) {
                 {!f.handled && <span className="text-amber-400">pendente</span>}
               </div>
               <p className="mt-2 text-sm text-white/80">{f.message}</p>
+              <div className="mt-3 flex items-center gap-3 text-xs">
+                {f.can_publish ? (
+                  <button
+                    onClick={() => void togglePublish(f)}
+                    disabled={saving === f.id}
+                    className={`rounded-md border px-3 py-1.5 transition disabled:opacity-40 ${
+                      f.published
+                        ? 'border-accent bg-accent/15 text-accent'
+                        : 'border-edge text-white/60 hover:text-white'
+                    }`}
+                  >
+                    {f.published ? '✓ No site' : 'Publicar no site'}
+                  </button>
+                ) : (
+                  <span className="text-white/25">não autorizou publicação</span>
+                )}
+              </div>
             </Card>
           ))}
         </div>
@@ -765,7 +793,7 @@ function Dashboard({ session }: { session: Session }) {
       sb.from('events').select('guild_id,kind,seconds,bytes,created_at').gte('created_at', since),
       sb
         .from('feedback')
-        .select('id,guild_id,guild_name,username,rating,message,handled,created_at')
+        .select('id,guild_id,guild_name,username,rating,message,handled,can_publish,published,created_at')
         .order('created_at', { ascending: false })
         .limit(200),
       sb.from('heartbeats').select('guilds,connected,buffering,uptime_seconds,version,at').order('at', { ascending: false }).limit(1500),
@@ -867,7 +895,7 @@ function Dashboard({ session }: { session: Session }) {
         {tab === 'Servidores' && <Servers d={d} m={m} />}
         {tab === 'Receita' && <Revenue d={d} m={m} />}
         {tab === 'Uso' && <Usage d={d} m={m} />}
-        {tab === 'Feedback' && <FeedbackTab d={d} m={m} />}
+        {tab === 'Feedback' && <FeedbackTab d={d} m={m} reload={() => void load()} />}
         {tab === 'Saúde' && <Health d={d} m={m} />}
       </div>
 
