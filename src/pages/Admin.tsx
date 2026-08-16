@@ -26,6 +26,7 @@ const PLAN_LABEL: Record<string, string> = {
   pro: 'Pro',
   max: 'Máximo',
   lifetime: 'Vitalício',
+  owner: 'Dono',
 }
 
 const TABS = ['Visão geral', 'Servidores', 'Receita', 'Uso', 'Feedback', 'Saúde'] as const
