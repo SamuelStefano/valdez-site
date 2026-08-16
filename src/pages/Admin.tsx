@@ -14,6 +14,7 @@ import {
   RECURRING_PLANS,
   type Feedback,
   type Guild,
+  type Heartbeat,
   type License,
   type Metrics,
   type Snapshot,
@@ -687,34 +688,99 @@ function Health({ d, m }: { d: Snapshot; m: Metrics }) {
         />
       </div>
 
-      <h2 className="mt-10 mb-3 font-semibold">Últimas batidas</h2>
-      <div className="overflow-x-auto rounded-xl border border-edge bg-panel">
-        <table className="w-full text-sm">
-          <thead className="border-b border-edge text-left text-xs uppercase text-white/40">
-            <tr>
-              <th className="px-4 py-3">Quando</th>
-              <th className="px-4 py-3">Servidores</th>
-              <th className="px-4 py-3">Em call</th>
-              <th className="px-4 py-3">Gravando</th>
-              <th className="px-4 py-3">No ar há</th>
-            </tr>
-          </thead>
-          <tbody>
-            {d.heartbeats.slice(0, 20).map((h, i) => (
-              <tr key={i} className="border-b border-edge/50 last:border-0">
-                <td className="px-4 py-3 text-white/60">{new Date(h.at).toLocaleString('pt-BR')}</td>
-                <td className="px-4 py-3">{h.guilds}</td>
-                <td className="px-4 py-3">{h.connected}</td>
-                <td className="px-4 py-3">{h.buffering}</td>
-                <td className="px-4 py-3 text-white/60">
-                  {h.uptime_seconds ? duration(h.uptime_seconds) : '—'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <h2 className="mt-10 mb-3 font-semibold">Últimas 24h, minuto a minuto</h2>
+      <UptimeStrip beats={last24} />
+
+      <h2 className="mt-10 mb-3 font-semibold">Quedas</h2>
+      <Outages beats={last24} />
     </>
+  )
+}
+
+const BLOCK_MIN = 15
+const BLOCKS = (24 * 60) / BLOCK_MIN
+
+// A tabela de batidas cruas era ilegível por construção: 1440 linhas por dia
+// dizendo a mesma coisa. Aqui cada bloco resume 15 minutos, então o dia inteiro
+// cabe numa faixa e o furo salta aos olhos.
+function UptimeStrip({ beats }: { beats: Heartbeat[] }) {
+  const end = Date.now()
+  const counts = new Array<number>(BLOCKS).fill(0)
+  for (const h of beats) {
+    const i = Math.floor((end - new Date(h.at).getTime()) / (BLOCK_MIN * 60_000))
+    if (i >= 0 && i < BLOCKS) counts[BLOCKS - 1 - i]++
+  }
+
+  return (
+    <div className="rounded-xl border border-edge bg-panel p-4">
+      <div className="flex gap-px">
+        {counts.map((n, i) => {
+          const at = new Date(end - (BLOCKS - 1 - i) * BLOCK_MIN * 60_000)
+          const tone = n >= BLOCK_MIN * 0.9 ? 'bg-green-500/70' : n > 0 ? 'bg-amber-400/70' : 'bg-red-500/60'
+          return (
+            <div
+              key={i}
+              title={`${at.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · ${n}/${BLOCK_MIN} batidas`}
+              className={`h-9 flex-1 rounded-[2px] ${tone}`}
+            />
+          )
+        })}
+      </div>
+      <div className="mt-2 flex justify-between text-xs text-white/40">
+        <span>24h atrás</span>
+        <span>agora</span>
+      </div>
+    </div>
+  )
+}
+
+function gapLabel(ms: number): string {
+  const min = Math.round(ms / 60_000)
+  if (min < 60) return `${min} min`
+  return `${Math.floor(min / 60)}h ${min % 60}min`
+}
+
+// Duas batidas seguidas com mais de 2 min de intervalo = o bot não respondeu. O
+// limite não é 1 min porque um atraso de rede no sync não é queda.
+const GAP_MS = 2 * 60_000
+
+function Outages({ beats }: { beats: Heartbeat[] }) {
+  const asc = [...beats].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
+  const gaps: { from: Date; ms: number; ongoing: boolean }[] = []
+
+  for (let i = 1; i < asc.length; i++) {
+    const prev = new Date(asc[i - 1].at).getTime()
+    const cur = new Date(asc[i].at).getTime()
+    if (cur - prev > GAP_MS) gaps.push({ from: new Date(prev), ms: cur - prev, ongoing: false })
+  }
+
+  const last = asc[asc.length - 1]
+  if (last && Date.now() - new Date(last.at).getTime() > GAP_MS) {
+    gaps.push({ from: new Date(last.at), ms: Date.now() - new Date(last.at).getTime(), ongoing: true })
+  }
+
+  if (gaps.length === 0) {
+    return (
+      <p className="rounded-xl border border-edge bg-panel p-5 text-sm text-white/50">
+        Nenhuma queda nas últimas 24h. O bot respondeu todo minuto.
+      </p>
+    )
+  }
+
+  return (
+    <div className="grid gap-2">
+      {gaps.reverse().map((g, i) => (
+        <div
+          key={i}
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-edge bg-panel px-5 py-3 text-sm"
+        >
+          <span className="text-white/60">{g.from.toLocaleString('pt-BR')}</span>
+          <span className={g.ongoing ? 'text-red-400' : 'text-amber-400'}>
+            {g.ongoing ? `fora do ar há ${gapLabel(g.ms)}` : `${gapLabel(g.ms)} sem sinal`}
+          </span>
+        </div>
+      ))}
+    </div>
   )
 }
 

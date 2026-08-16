@@ -362,8 +362,10 @@ function Account() {
   )
 }
 
-function Feedbacks() {
-  const rows = usePublicFeedback()
+// Os dados vêm por prop de propósito: o useReveal só reobserva os `.reveal` novos
+// quando o Landing re-renderiza, então estado que faz a seção aparecer tem que
+// morar lá em cima. Guardado aqui, a seção monta invisível pra sempre.
+function Feedbacks({ rows }: { rows: PublicFeedback[] | null }) {
   if (rows === null) return null
 
   return (
@@ -428,6 +430,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 export default function Landing() {
   useReveal()
   const slotsLeft = useFounderSlotsLeft()
+  const feedbacks = usePublicFeedback()
 
   return (
     <div className="min-h-screen overflow-x-hidden">
@@ -810,7 +813,7 @@ export default function Landing() {
         <div className="mt-4 text-sm text-muted">— Samuel Stefano, criador do Valdez</div>
       </Reveal>
 
-      <Feedbacks />
+      <Feedbacks rows={feedbacks} />
 
       <section id="faq" className="mx-auto my-24 max-w-[820px] scroll-mt-24 px-5 sm:px-10 lg:px-16">
         <Reveal>
