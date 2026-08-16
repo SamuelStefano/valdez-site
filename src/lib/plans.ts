@@ -46,6 +46,7 @@ export const PLANS: Plan[] = [
     tagline: 'Call longa, raid, campeonato, podcast.',
     support: 'Suporte no WhatsApp',
     features: [
+      'Vídeo da sala: quem falou acende na hora',
       'Clip da voz de UMA pessoa só',
       'Retrospectiva semanal do servidor',
       'Clip dos últimos 30 minutos',

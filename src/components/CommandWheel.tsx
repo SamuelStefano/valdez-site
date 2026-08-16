@@ -26,9 +26,9 @@ const TIER_BADGE: Record<Tier, string> = {
 const COMMANDS: Command[] = [
   {
     cmd: '/clip',
-    args: '[duração] [pessoa]',
+    args: '[duração] [formato] [pessoa]',
     title: 'Salva o que acabou de acontecer',
-    desc: 'Pega os últimos minutos da call e joga no canal de texto em MP3. Sem duração, volta 2 minutos. No Máximo dá pra pedir a voz de uma pessoa só, sem o resto da call por cima.',
+    desc: 'Pega os últimos minutos da call e joga no canal de texto em MP3. Sem duração, volta 2 minutos. No Máximo você troca o formato para vídeo da sala — cada pessoa vira um boneco com o avatar dela e acende em verde na hora exata em que fala — e dá pra pedir a voz de uma pessoa só, sem o resto da call por cima.',
     who: 'Qualquer um na call',
     tier: 'Grátis',
   },
