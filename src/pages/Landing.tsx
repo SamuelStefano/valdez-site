@@ -190,6 +190,10 @@ const FAQ = [
     a: 'Só você, dono do servidor. O plano é por servidor e todo mundo lá dentro usa sem pagar nada. Não existe cobrança por membro, por hora de call nem por clipe.',
   },
   {
+    q: 'Comecei no Básico. Se eu quiser subir no meio do mês, pago tudo de novo?',
+    a: 'Não. O que sobrou do mês que você já pagou vira crédito: você completa só a diferença pelos dias que ainda faltam, e a data de vencimento nem muda. Subir do Básico pro Pro faltando 20 dias custa R$ 13,33, não R$ 30. E se você é fundador, o upgrade sai de graça — R$ 10/mês travado vale em qualquer plano.',
+  },
+  {
     q: 'Se eu cancelar, perco os clipes?',
     a: 'Não. Os clipes já publicados são mensagens no canal do seu servidor — eles ficam lá pra sempre, mesmo que você cancele. O que para é o bot entrar na call de novo.',
   },
@@ -776,7 +780,10 @@ export default function Landing() {
           <div className="mt-9 grid gap-4.5 sm:grid-cols-3">
             {[
               ['Sem cartão pra testar', 'O teste não pede cartão. Se você sumir, nada é cobrado.'],
-              ['Sem fidelidade', 'Cancela quando quiser. O bot para no fim do período já pago.'],
+              [
+                'Sem fidelidade e sem travar no plano',
+                'Cancela quando quiser. E subir de plano no meio do mês custa só a diferença dos dias que faltam.',
+              ],
               [
                 'Sem perder o que já é seu',
                 'Os clipes são mensagens no seu canal. Cancelar não apaga nada.',
