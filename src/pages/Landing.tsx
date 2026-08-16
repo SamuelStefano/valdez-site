@@ -12,6 +12,7 @@ import {
 import { supabase } from '../lib/supabase'
 import { useSession, useIsAdmin, signInWithDiscord, signOut } from '../lib/auth'
 import { Aurora, CountUp, Reveal, Spotlight, useReveal } from '../components/motion'
+import { CommandWheel } from '../components/CommandWheel'
 
 // client_id é público por definição. As permissões são o mínimo que o bot usa:
 // ver canal, mandar mensagem, anexar arquivo, entrar/falar na call e mudar o
@@ -364,6 +365,9 @@ export default function Landing() {
           <a href="#como-funciona" className="hover:text-[#e8eaf0]">
             Como funciona
           </a>
+          <a href="#comandos" className="hover:text-[#e8eaf0]">
+            Comandos
+          </a>
           <a href="#planos" className="hover:text-[#e8eaf0]">
             Planos
           </a>
@@ -433,6 +437,24 @@ export default function Landing() {
         <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-[linear-gradient(90deg,var(--color-ink),transparent)]" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-[linear-gradient(270deg,var(--color-ink),transparent)]" />
       </div>
+
+      <section
+        id="comandos"
+        className="mx-auto my-24 max-w-[1150px] scroll-mt-24 px-5 sm:px-10 lg:px-16"
+      >
+        <Reveal>
+          <h2 className="m-0 mb-2 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
+            Onze comandos. Nenhum manual.
+          </h2>
+          <p className="mx-auto m-0 mb-12 max-w-[54ch] text-center text-[15px] text-muted">
+            Ninguém do seu servidor vai ler documentação. Por isso é tudo comando de uma linha, com
+            nome óbvio. Clique em qualquer um pra ver o que ele faz.
+          </p>
+        </Reveal>
+        <Reveal delay={80}>
+          <CommandWheel />
+        </Reveal>
+      </section>
 
       <Reveal as="section" className="mx-auto my-20 max-w-[1000px] px-5 sm:px-10 lg:px-16">
         <h2 className="m-0 mb-3 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
