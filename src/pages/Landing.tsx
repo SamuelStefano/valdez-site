@@ -4,8 +4,6 @@ import {
   PLANS,
   FREE,
   LIFETIME,
-  TRIAL_DAYS,
-  TRIAL_PLAN,
   FOUNDER_PRICE,
   FOUNDER_SLOTS,
 } from '../lib/plans'
@@ -182,8 +180,12 @@ const FAQ = [
     a: 'Usa /privacidade optout e pronto. A voz dessa pessoa não entra no buffer nem por um instante, e o que já estava guardado dela é descartado na hora. Sem pedir pra admin, sem negociar.',
   },
   {
-    q: 'Preciso de cartão pra testar?',
-    a: `Não. Todo servidor novo começa com ${TRIAL_DAYS} dias do ${TRIAL_PLAN} liberado por inteiro, sem cartão e sem cadastro. Se você não assinar, nada é cobrado e o bot continua na call no grátis, com 30 segundos de buffer.`,
+    q: 'Preciso de cartão pra usar?',
+    a: 'Não. O grátis é grátis de verdade, sem prazo e sem cadastro: o bot entra na call e guarda os últimos 30 segundos pra sempre. Não existe teste que expira e te deixa na mão no meio da semana — você paga quando quiser mais janela, e só aí.',
+  },
+  {
+    q: 'Posso pedir uma função que não existe?',
+    a: 'Pode, e é assim que o bot cresce. Servidor pagante usa /feedback e o pedido cai direto comigo — não é formulário que some. Metade do que existe hoje veio de pedido, e o Máximo tem prioridade na fila.',
   },
   {
     q: 'Quem paga: eu ou cada pessoa do servidor?',
@@ -549,7 +551,7 @@ export default function Landing() {
             </a>
           </div>
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 font-mono text-xs text-muted">
-            <span>✓ {TRIAL_DAYS} dias do {TRIAL_PLAN}, completo</span>
+            <span>✓ Grátis pra sempre</span>
             <span>✓ Sem cartão</span>
             <span>✓ Sai quando quiser</span>
             <span>✓ Leva 30 segundos</span>
@@ -759,11 +761,9 @@ export default function Landing() {
             Um preço. O servidor inteiro usa.
           </h2>
           <p className="mx-auto m-0 mb-8 max-w-[54ch] text-center text-[15px] text-muted">
-            Quem paga é você, dono do servidor — nunca cada membro. Todo servidor começa com{' '}
-            <strong className="text-body">
-              {TRIAL_DAYS} dias do {TRIAL_PLAN}
-            </strong>
-            , o plano do meio, liberado por inteiro e sem cartão. Quando o teste acaba, o bot{' '}
+            Quem paga é você, dono do servidor — nunca cada membro. Não existe teste que expira: todo
+            servidor entra no <strong className="text-body">grátis, sem prazo e sem cartão</strong>, e você
+            paga no dia em que quiser mais janela de gravação. Cancelou, o bot{' '}
             <strong className="text-body">continua na call no grátis</strong> — ele não vai embora.
           </p>
         </Reveal>
@@ -832,7 +832,7 @@ export default function Landing() {
                       : 'border-[#3a4256] bg-panel text-[#e8eaf0]'
                   }`}
                 >
-                  Começar com {TRIAL_DAYS} dias do {TRIAL_PLAN}
+                  Assinar o {plan.label}
                 </a>
               </div>
             </Reveal>
@@ -877,14 +877,17 @@ export default function Landing() {
         <Reveal delay={160}>
           <div className="mt-9 grid gap-4.5 sm:grid-cols-3">
             {[
-              ['Sem cartão pra testar', 'O teste não pede cartão. Se você sumir, nada é cobrado.'],
+              [
+                'Sem cartão pra começar',
+                'O grátis não pede cartão nem cadastro. Você instala e usa hoje; se nunca assinar, nada é cobrado.',
+              ],
               [
                 'Sem fidelidade e sem travar no plano',
                 'Cancela quando quiser. E subir de plano no meio do mês custa só a diferença dos dias que faltam.',
               ],
               [
-                'Sem perder o que já é seu',
-                'Os clipes são mensagens no seu canal. Cancelar não apaga nada.',
+                'Você manda no roadmap',
+                'Assinante pede alteração e função nova pelo /feedback, e o pedido cai direto comigo.',
               ],
             ].map(([t, d]) => (
               <div key={t} className="rounded-2xl border border-edge bg-panel/50 p-5">
@@ -908,6 +911,47 @@ export default function Landing() {
         </blockquote>
         <div className="mt-4 text-sm text-muted">— Samuel Stefano, criador do Valdez</div>
       </Reveal>
+
+      <section className="mx-auto my-24 max-w-[1000px] px-5 sm:px-10 lg:px-16">
+        <Reveal>
+          <div className="mb-3 text-center font-mono text-xs tracking-[0.1em] text-accent">
+            VOCÊ PEDE, EU FAÇO
+          </div>
+          <h2 className="m-0 mb-2 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
+            Faltou alguma coisa? Você pede e eu mudo.
+          </h2>
+          <p className="mx-auto m-0 mb-8 max-w-[58ch] text-center text-[15px] text-muted">
+            Aqui não tem formulário que cai no vazio nem suporte terceirizado. Assinante manda{' '}
+            <Cmd>/feedback</Cmd> dentro do Discord e o pedido chega direto em mim — mudança no que já existe,
+            função que não existe ainda, ou bug que te travou ontem.
+          </p>
+        </Reveal>
+
+        <div className="grid gap-4.5 sm:grid-cols-3">
+          {[
+            [
+              'Pede de dentro da call',
+              'Sem sair do Discord, sem abrir ticket, sem conta em outro site. Um comando e acabou.',
+            ],
+            [
+              'Quem lê sou eu',
+              'Não tem time de suporte lendo por cima. Bug costuma sair na mesma semana.',
+            ],
+            [
+              'Vira funcionalidade de verdade',
+              'Boa parte do que o bot faz hoje nasceu de pedido de servidor. No Máximo, o seu fura a fila.',
+            ],
+          ].map(([t, d], i) => (
+            <Reveal key={t} delay={i * 90}>
+              <div className="h-full rounded-[18px] border border-edge bg-panel p-6">
+                <div className="mb-2 font-mono text-[13px] text-accent">0{i + 1}</div>
+                <div className="mb-2 text-[17px] font-bold tracking-[-0.02em]">{t}</div>
+                <p className="m-0 text-sm leading-relaxed text-muted">{d}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
       <Feedbacks rows={feedbacks} />
 
@@ -933,7 +977,7 @@ export default function Landing() {
         <p className="m-0 mb-7 text-[17px] text-muted">Ou você salva, ou vira "tinha que estar lá".</p>
         <Cta big>Adicionar o Valdez ao Discord</Cta>
         <p className="mt-4 font-mono text-xs text-muted">
-          {TRIAL_DAYS} dias do {TRIAL_PLAN} · sem cartão · sai quando quiser
+          grátis pra sempre · sem cartão · sai quando quiser
         </p>
       </Reveal>
 

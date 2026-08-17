@@ -99,19 +99,22 @@ export function Termos() {
       </section>
 
       <section>
-        <h2>Teste e assinatura</h2>
+        <h2>Plano grátis e assinatura</h2>
         <ul>
           <li>
-            Todo servidor novo começa com 3 dias do plano Pro liberado por inteiro, sem cartão. O teste
-            vale uma vez por servidor e uma vez por dono de servidor.
+            Todo servidor novo entra no plano grátis, sem cartão e sem prazo. Nele o bot fica na call e
+            guarda os últimos 30 segundos.
           </li>
-          <li>Terminado o teste, o bot deixa de entrar na call até que uma assinatura seja ativada.</li>
+          <li>Não existe período de teste dos planos pagos: o que é pago só liga depois do pagamento.</li>
           <li>A assinatura é mensal, por servidor, e pode ser cancelada a qualquer momento.</li>
           <li>
             Servidores que assinaram dentro da promoção de fundador mantêm o preço promocional enquanto a
             assinatura não for cancelada.
           </li>
-          <li>Cancelou, o bot para no fim do período já pago. Não há reembolso proporcional.</li>
+          <li>
+            Cancelou, o bot para no fim do período já pago e o servidor volta pro grátis. Não há reembolso
+            proporcional.
+          </li>
         </ul>
       </section>
 

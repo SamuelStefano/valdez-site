@@ -90,7 +90,5 @@ export const LIFETIME = {
   ],
 }
 
-export const TRIAL_DAYS = 3
-export const TRIAL_PLAN = 'Pro'
 export const FOUNDER_PRICE = 10
 export const FOUNDER_SLOTS = 100

@@ -105,7 +105,7 @@ export interface Metrics {
   arpa: number
   paying: License[]
   lifetime: License[]
-  trials: License[]
+  free: Guild[]
   expired: License[]
   cashTotal: number
   cash30: number
@@ -135,8 +135,10 @@ export function computeMetrics(d: Snapshot): Metrics {
   const active = d.licenses.filter((l) => l.status === 'active')
   const paying = active.filter((l) => RECURRING_PLANS.includes(l.plan))
   const lifetime = d.licenses.filter((l) => l.plan === 'lifetime')
-  const trials = active.filter((l) => l.plan === 'trial')
   const expired = d.licenses.filter((l) => l.status !== 'active')
+  // Servidor no gratuito não tem linha de licença: ele é a ausência dela. Sem o
+  // teste, é este o topo do funil — quem instalou e ainda não pagou.
+  const free = activeGuilds.filter((g) => byGuild.get(g.guild_id)?.status !== 'active')
 
   const mrr = paying.reduce((s, l) => s + l.price_cents, 0)
   const arpa = paying.length ? mrr / paying.length : 0
@@ -158,8 +160,8 @@ export function computeMetrics(d: Snapshot): Metrics {
   const churnRate = base > 0 ? churned30 / base : 0
   const ltv = churnRate > 0 ? arpa / churnRate : null
 
-  const endedTrials = expired.filter((l) => l.plan === 'trial').length
-  const conversion = endedTrials + paying.length > 0 ? paying.length / (endedTrials + paying.length) : null
+  const customers = active.length
+  const conversion = activeGuilds.length > 0 ? customers / activeGuilds.length : null
 
   const clipKinds = new Set(['clip', 'replay'])
   const clipEvents = d.events.filter((e) => clipKinds.has(e.kind))
@@ -194,7 +196,7 @@ export function computeMetrics(d: Snapshot): Metrics {
       100
     : null
 
-  const planMix = ['trial', ...RECURRING_PLANS, 'lifetime'].map((plan) => {
+  const planMix = [...RECURRING_PLANS, 'lifetime'].map((plan) => {
     const rows = active.filter((l) => l.plan === plan)
     return {
       plan,
@@ -209,7 +211,7 @@ export function computeMetrics(d: Snapshot): Metrics {
     arpa,
     paying,
     lifetime,
-    trials,
+    free,
     expired,
     cashTotal,
     cash30,

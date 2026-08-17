@@ -21,7 +21,7 @@ import {
 } from '../lib/metrics'
 
 const PLAN_LABEL: Record<string, string> = {
-  trial: 'Teste',
+  free: 'Grátis',
   basic: 'Básico',
   pro: 'Pro',
   max: 'Máximo',
@@ -166,9 +166,7 @@ function PlanMix({ mix }: { mix: Metrics['planMix'] }) {
           <div
             key={m.plan}
             className={
-              m.plan === 'trial'
-                ? 'bg-white/25'
-                : m.plan === 'lifetime'
+              m.plan === 'lifetime'
                   ? 'bg-[#5865f2]'
                   : m.plan === 'max'
                     ? 'bg-accent'
@@ -199,7 +197,7 @@ function Funnel({ m }: { m: Metrics }) {
   const installed = m.activeGuilds.length + m.expired.length
   const steps = [
     ['Instalaram o bot', installed],
-    ['Teste ativo agora', m.trials.length],
+    ['Rodando no grátis', m.free.length],
     ['Viraram pagante', m.paying.length + m.lifetime.length],
   ] as const
   const max = Math.max(1, ...steps.map((s) => s[1]))
@@ -220,7 +218,7 @@ function Funnel({ m }: { m: Metrics }) {
         ))}
       </div>
       <p className="mt-4 text-xs text-white/40">
-        Conversão teste → pago: {m.conversion === null ? '—' : pct(m.conversion)}
+        Conversão grátis → pago: {m.conversion === null ? '—' : pct(m.conversion)}
       </p>
     </Card>
   )
@@ -230,7 +228,7 @@ type SortKey = 'name' | 'members' | 'plan' | 'clips' | 'last' | 'expires'
 
 function Servers({ d, m }: { d: Snapshot; m: Metrics }) {
   const [query, setQuery] = useState('')
-  const [only, setOnly] = useState<'todos' | 'pagando' | 'teste' | 'risco'>('todos')
+  const [only, setOnly] = useState<'todos' | 'pagando' | 'grátis' | 'risco'>('todos')
   const [sort, setSort] = useState<SortKey>('clips')
 
   const byGuild = useMemo(() => new Map(d.licenses.map((l) => [l.guild_id, l])), [d.licenses])
@@ -249,7 +247,7 @@ function Servers({ d, m }: { d: Snapshot; m: Metrics }) {
       const l = byGuild.get(g.guild_id)
       if (query && !(g.name ?? g.guild_id).toLowerCase().includes(query.toLowerCase())) return false
       if (only === 'pagando') return l ? RECURRING_PLANS.includes(l.plan) || l.plan === 'lifetime' : false
-      if (only === 'teste') return l?.plan === 'trial'
+      if (only === 'grátis') return l?.status !== 'active'
       if (only === 'risco') return atRisk.has(g.guild_id)
       return true
     })
@@ -292,7 +290,7 @@ function Servers({ d, m }: { d: Snapshot; m: Metrics }) {
           className="w-56 rounded-lg border border-edge bg-panel px-3 py-2 text-sm outline-none focus:border-accent"
         />
         <div className="flex gap-1 rounded-lg border border-edge bg-panel p-1 text-sm">
-          {(['todos', 'pagando', 'teste', 'risco'] as const).map((f) => (
+          {(['todos', 'pagando', 'grátis', 'risco'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setOnly(f)}
@@ -794,7 +792,7 @@ function Overview({ d, m }: { d: Snapshot; m: Metrics }) {
         <Kpi
           label="Servidores"
           value={String(m.activeGuilds.length)}
-          hint={`+${m.newGuilds30.length} em 30d · ${m.trials.length} em teste`}
+          hint={`+${m.newGuilds30.length} em 30d · ${m.free.length} no grátis`}
         />
         <Kpi label="Alcance" value={m.members.toLocaleString('pt-BR')} hint="membros nos servidores" />
       </div>
@@ -806,7 +804,7 @@ function Overview({ d, m }: { d: Snapshot; m: Metrics }) {
           value={pct(m.churnRate)}
           tone={m.churnRate > 0.05 ? 'bad' : 'good'}
         />
-        <Kpi label="Conversão teste" value={m.conversion === null ? '—' : pct(m.conversion)} />
+        <Kpi label="Conversão pago" value={m.conversion === null ? '—' : pct(m.conversion)} />
         <Kpi
           label="Bot"
           value={m.online ? 'online' : 'sem sinal'}

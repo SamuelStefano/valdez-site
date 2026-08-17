@@ -113,8 +113,16 @@ const COMMANDS: Command[] = [
   {
     cmd: '/feedback',
     args: '<mensagem> [nota]',
-    title: 'Fala direto comigo',
-    desc: 'O que faltou, o que quebrou, o que você queria que tivesse. Cai direto no meu painel — eu leio tudo.',
+    title: 'Pede mudança e função nova',
+    desc: 'O que faltou, o que quebrou, o que você queria que tivesse. Cai direto comigo — eu leio tudo e o que dá pra fazer entra na fila. É por isso que ele é de plano pago: pedido de quem sustenta o bot é o que decide o que vem depois.',
+    who: 'Qualquer um na call',
+    tier: 'Básico',
+  },
+  {
+    cmd: '/help',
+    args: '[comando]',
+    title: 'Explica tudo, comando por comando',
+    desc: 'Abre um menu por categoria — gravações, música, servidor e conta — com a explicação detalhada de cada comando e de cada opção dele. Diz também o que o seu plano libera e o que não.',
     who: 'Qualquer um',
     tier: 'Grátis',
   },
