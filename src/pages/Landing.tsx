@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   PLANS,
@@ -318,6 +318,57 @@ function WaveformDemo() {
   )
 }
 
+// O vídeo é a saída real do bot, gerado pelo mesmo exportador que roda em
+// produção. Trocar por um mockup bonito seria mentir sobre o que o cliente
+// recebe — e ele descobriria no primeiro /clip.
+const ROOM_STEPS = [
+  {
+    n: '01',
+    t: 'Você dá /clip',
+    d: 'O MP3 volta na hora, como sempre. Ninguém espera render pra ouvir o que acabou de acontecer.',
+  },
+  {
+    n: '02',
+    t: 'Aperta "Vídeo da sala"',
+    d: 'O botão fica embaixo do clipe. Aí sim o Valdez monta a sala — leva alguns segundos e cai no mesmo canal.',
+  },
+  {
+    n: '03',
+    t: 'O vídeo mostra quem falou',
+    d: 'Cada pessoa vira um card com o avatar dela. O anel acende em verde no instante exato em que ela fala, e apaga quando ela cala.',
+  },
+]
+
+function RoomVideoDemo() {
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el) return
+    // Loop curto no meio da leitura: quem pediu menos movimento fica só com o
+    // poster e o controle de play.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    el.play().catch(() => {})
+  }, [])
+
+  return (
+    <video
+      ref={videoRef}
+      className="block w-full rounded-xl border border-edge bg-ink"
+      src="/sala-demo.mp4"
+      poster="/sala-demo.jpg"
+      width={1280}
+      height={720}
+      loop
+      muted
+      playsInline
+      controls
+      preload="metadata"
+      aria-label="Exemplo de vídeo da sala: quatro avatares em cards, o de quem está falando acende em verde"
+    />
+  )
+}
+
 function Account() {
   const { session, ready } = useSession()
   const isAdmin = useIsAdmin(session)
@@ -444,6 +495,9 @@ export default function Landing() {
         <div className="hidden items-center gap-7 text-sm text-muted md:flex">
           <a href="#como-funciona" className="hover:text-[#e8eaf0]">
             Como funciona
+          </a>
+          <a href="#sala" className="hover:text-[#e8eaf0]">
+            Vídeo da sala
           </a>
           <a href="#comandos" className="hover:text-[#e8eaf0]">
             Comandos
@@ -578,6 +632,47 @@ export default function Landing() {
             </Reveal>
           ))}
         </div>
+      </Reveal>
+
+      <Reveal
+        as="section"
+        className="mx-auto my-24 max-w-[1100px] scroll-mt-24 px-5 sm:px-10 lg:px-16"
+      >
+        <div id="sala" />
+        <div className="mb-2.5 text-center font-mono text-xs tracking-[0.1em] text-accent">
+          NOVIDADE
+        </div>
+        <h2 className="m-0 mb-3.5 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
+          A call vira vídeo. Quem falou, acende.
+        </h2>
+        <p className="mx-auto mb-9 max-w-[640px] text-center text-[15px] leading-relaxed text-muted">
+          Bot de gravação te devolve um MP3 e a missão de lembrar quem disse o quê. O Valdez devolve
+          também a sala: os avatares de quem estava na call, acendendo em verde no exato momento em
+          que cada um fala. Dá pra mandar no grupo e a pessoa entende sem ouvir.
+        </p>
+
+        <Reveal>
+          <div className="rounded-2xl border border-edge bg-panel p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)] sm:p-4">
+            <RoomVideoDemo />
+          </div>
+        </Reveal>
+
+        <div className="mt-4.5 grid gap-4.5 sm:grid-cols-3">
+          {ROOM_STEPS.map((s, i) => (
+            <Reveal key={s.n} delay={i * 90}>
+              <Spotlight className="h-full rounded-2xl border border-edge bg-panel p-6.5 transition hover:-translate-y-1 hover:border-accent hover:shadow-[0_12px_40px_rgba(255,77,61,0.12)]">
+                <div className="mb-3 font-mono text-[13px] text-accent">{s.n}</div>
+                <div className="mb-2 text-lg font-bold">{s.t}</div>
+                <div className="text-sm leading-relaxed text-muted">{s.d}</div>
+              </Spotlight>
+            </Reveal>
+          ))}
+        </div>
+
+        <p className="mt-6 text-center text-sm text-muted">
+          Vídeo da sala está no plano <span className="font-semibold text-body">Máximo</span>, em
+          clipes de até 5 minutos. O MP3 continua em todos os planos.
+        </p>
       </Reveal>
 
       <section className="mx-auto my-20 grid max-w-[1100px] gap-4.5 px-5 sm:px-10 md:grid-cols-3 lg:px-16">
