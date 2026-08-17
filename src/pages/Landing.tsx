@@ -902,8 +902,9 @@ export default function Landing() {
       <Reveal as="section" className="mx-auto my-24 max-w-[760px] px-5 text-center sm:px-10 lg:px-16">
         <div className="mb-4 font-mono text-xs tracking-[0.1em] text-accent">POR QUE EU FIZ ISSO</div>
         <blockquote className="m-0 text-[clamp(20px,3.4vw,30px)] font-semibold leading-snug tracking-[-0.02em]">
-          "Eu jogava com meus amigos e as melhores frases morriam na call. Não existia bot barato que
-          gravasse voz. Então eu fiz o meu."
+          "Eu jogava com meus amigos e as melhores frases morriam na call. Não existia um bot que
+          tocasse a música, salvasse o clipe e ainda te mostrasse a call inteira em vídeo, com quem
+          falou acendendo na hora. Então eu fiz."
         </blockquote>
         <div className="mt-4 text-sm text-muted">— Samuel Stefano, criador do Valdez</div>
       </Reveal>
