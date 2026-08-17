@@ -642,15 +642,16 @@ export default function Landing() {
       >
         <div id="sala" />
         <div className="mb-2.5 text-center font-mono text-xs tracking-[0.1em] text-accent">
-          NOVIDADE
+          INÉDITO
         </div>
         <h2 className="m-0 mb-3.5 text-center text-[clamp(26px,4vw,40px)] font-extrabold tracking-[-0.03em]">
           A call vira vídeo. Quem falou, acende.
         </h2>
         <p className="mx-auto mb-9 max-w-[640px] text-center text-[15px] leading-relaxed text-muted">
-          Bot de gravação te devolve um MP3 e a missão de lembrar quem disse o quê. O Valdez devolve
-          também a sala: os avatares de quem estava na call, acendendo em verde no exato momento em
-          que cada um fala. Dá pra mandar no grupo e a pessoa entende sem ouvir.
+          Nenhum outro bot de Discord devolve isso. Todos te dão um MP3 e a missão de lembrar quem
+          disse o quê. O Valdez devolve também a sala: os avatares de quem estava na call, acendendo
+          em verde no exato momento em que cada um fala. Dá pra mandar no grupo e a pessoa entende
+          sem ouvir.
         </p>
 
         <Reveal>
