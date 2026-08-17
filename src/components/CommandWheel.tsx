@@ -26,9 +26,9 @@ const TIER_BADGE: Record<Tier, string> = {
 const COMMANDS: Command[] = [
   {
     cmd: '/clip',
-    args: '[duração] [formato] [pessoa]',
+    args: '[duração] [pessoa]',
     title: 'Salva o que acabou de acontecer',
-    desc: 'Pega os últimos minutos da call e joga no canal de texto em MP3. Sem duração, volta 2 minutos. No Máximo você troca o formato para vídeo da sala — cada pessoa vira um boneco com o avatar dela e acende em verde na hora exata em que fala — e dá pra pedir a voz de uma pessoa só, sem o resto da call por cima.',
+    desc: 'Pega os últimos minutos da call e joga no canal de texto em MP3. Sem duração, volta 2 minutos. Embaixo do clip tem um botão de vídeo da sala: o avatar de cada um aparece na tela e acende em verde na hora exata em que a pessoa fala. No Máximo dá pra pedir também a voz de uma pessoa só, sem o resto da call por cima.',
     who: 'Qualquer um na call',
     tier: 'Grátis',
   },
@@ -86,6 +86,14 @@ const COMMANDS: Command[] = [
     desc: 'Define o canal de voz que ele acompanha, onde os clips caem, o contador ao vivo na call e os cargos entregues por nível.',
     who: 'Só admin',
     tier: 'Pro',
+  },
+  {
+    cmd: '/clear',
+    args: '<quantidade>',
+    title: 'Limpa o canal de texto',
+    desc: 'Apaga de uma vez as últimas mensagens do canal, até 100 por comando. Só aparece pra quem tem permissão de gerenciar mensagens.',
+    who: 'Só moderador',
+    tier: 'Grátis',
   },
   {
     cmd: '/privacidade',
