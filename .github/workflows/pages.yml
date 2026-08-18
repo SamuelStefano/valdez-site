@@ -35,7 +35,7 @@ jobs:
       - name: Rotas estaticas
         run: |
           cp dist/index.html dist/404.html
-          for r in admin termos privacidade; do
+          for r in admin assinar termos privacidade; do
             mkdir -p "dist/$r" && cp dist/index.html "dist/$r/index.html"
           done
       - uses: actions/upload-pages-artifact@v3
