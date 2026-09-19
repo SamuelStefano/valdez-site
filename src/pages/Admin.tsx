@@ -29,6 +29,9 @@ const PLAN_LABEL: Record<string, string> = {
   owner: 'Dono',
 }
 
+// Teto explícito: sem ele o PostgREST trunca no limite dele e nada avisa.
+const ROW_LIMIT = 5000
+
 const TABS = ['Visão geral', 'Servidores', 'Receita', 'Uso', 'Feedback', 'Saúde'] as const
 type Tab = (typeof TABS)[number]
 
@@ -846,6 +849,7 @@ function Overview({ d, m }: { d: Snapshot; m: Metrics }) {
 function Dashboard({ session }: { session: Session }) {
   const [d, setD] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [truncated, setTruncated] = useState<string[]>([])
   const [tab, setTab] = useState<Tab>('Visão geral')
   const [loadedAt, setLoadedAt] = useState<Date | null>(null)
 
@@ -853,16 +857,26 @@ function Dashboard({ session }: { session: Session }) {
     const sb = supabase!
     const since = new Date(Date.now() - 30 * 86400_000).toISOString()
     const [guilds, licenses, events, feedback, heartbeats, payments] = await Promise.all([
-      sb.from('guilds').select('guild_id,name,member_count,owner_id,last_seen_at,joined_at,left_at'),
-      sb.from('licenses').select('guild_id,plan,status,price_cents,founder,started_at,expires_at'),
-      sb.from('events').select('guild_id,kind,seconds,bytes,created_at').gte('created_at', since),
+      sb
+        .from('guilds')
+        .select('guild_id,name,member_count,owner_id,last_seen_at,joined_at,left_at')
+        .limit(ROW_LIMIT),
+      sb
+        .from('licenses')
+        .select('guild_id,plan,status,price_cents,founder,started_at,expires_at')
+        .limit(ROW_LIMIT),
+      sb
+        .from('events')
+        .select('guild_id,kind,seconds,bytes,created_at')
+        .gte('created_at', since)
+        .limit(ROW_LIMIT),
       sb
         .from('feedback')
         .select('id,guild_id,guild_name,username,rating,message,handled,can_publish,published,created_at')
         .order('created_at', { ascending: false })
         .limit(200),
       sb.from('heartbeats').select('guilds,connected,buffering,uptime_seconds,version,at').order('at', { ascending: false }).limit(1500),
-      sb.from('payments').select('guild_id,amount_cents,method,paid_at'),
+      sb.from('payments').select('guild_id,amount_cents,method,paid_at').limit(ROW_LIMIT),
     ])
 
     const failed = [guilds, licenses, events, feedback, heartbeats, payments].find((r) => r.error)
@@ -870,6 +884,21 @@ function Dashboard({ session }: { session: Session }) {
       setError(failed.error.message)
       return
     }
+
+    // O PostgREST corta a resposta no teto sem devolver erro: caixa e uso
+    // ficariam subestimados e nada na tela diria que faltou linha.
+    setTruncated(
+      (
+        [
+          ['servidores', guilds.data],
+          ['licenças', licenses.data],
+          ['eventos', events.data],
+          ['pagamentos', payments.data],
+        ] as const
+      )
+        .filter(([, rows]) => (rows?.length ?? 0) >= ROW_LIMIT)
+        .map(([name]) => name),
+    )
 
     setD({
       guilds: (guilds.data ?? []) as Guild[],
@@ -938,6 +967,14 @@ function Dashboard({ session }: { session: Session }) {
           </button>
         </div>
       </div>
+
+      {truncated.length > 0 && (
+        <p className="mt-5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+          <span className="text-amber-400">▲</span> A consulta bateu o teto de {ROW_LIMIT} linhas em{' '}
+          <strong>{truncated.join(', ')}</strong>. Os números abaixo estão subestimados até isto
+          virar agregação no banco.
+        </p>
+      )}
 
       <div className="mt-7 flex flex-wrap gap-1 border-b border-edge">
         {TABS.map((t) => (

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase, supabaseReady } from '../lib/supabase'
 import { useSession, signInWithDiscord, signOut } from '../lib/auth'
 import { PLANS, LIFETIME, FOUNDER_PRICE } from '../lib/plans'
+import { isLicenseActive, OWNER_PLAN } from '../lib/metrics'
 
 interface Guild {
   guild_id: string
@@ -178,7 +179,7 @@ export default function Assinar() {
         <div className="grid gap-2.5">
           {guilds.map((g) => {
             const on = selected === g.guild_id
-            const paying = g.status === 'active' && g.plan !== 'owner'
+            const paying = isLicenseActive(g) && g.plan !== OWNER_PLAN
             return (
               <button
                 key={g.guild_id}

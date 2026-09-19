@@ -80,6 +80,23 @@ export const DAY = 86_400_000
 // decide se este negócio se paga todo mês.
 export const RECURRING_PLANS = ['basic', 'pro', 'max']
 
+// A licença vitalícia do meu próprio servidor. Não é receita e não é conversão.
+export const OWNER_PLAN = 'owner'
+
+// `status` é escrito por dois lados (webhook e sync do bot) e já ficou preso em
+// `active` com o vencimento no passado — era o MRR inflado e o churn invisível.
+// A data não mente: um sync perdido não consegue mais inventar receita.
+export interface LicenseWindow {
+  status: string | null
+  expires_at: string | null
+}
+
+export function isLicenseActive(l: LicenseWindow, now = Date.now()): boolean {
+  if (l.status !== 'active') return false
+  if (l.expires_at === null) return true
+  return new Date(l.expires_at).getTime() > now
+}
+
 export const brl = (cents: number) =>
   (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -132,13 +149,17 @@ export function computeMetrics(d: Snapshot): Metrics {
   const activeGuilds = d.guilds.filter((g) => !g.left_at)
   const byGuild = new Map(d.licenses.map((l) => [l.guild_id, l]))
 
-  const active = d.licenses.filter((l) => l.status === 'active')
+  const active = d.licenses.filter((l) => isLicenseActive(l, now))
   const paying = active.filter((l) => RECURRING_PLANS.includes(l.plan))
   const lifetime = d.licenses.filter((l) => l.plan === 'lifetime')
-  const expired = d.licenses.filter((l) => l.status !== 'active')
+  const expired = d.licenses.filter((l) => !isLicenseActive(l, now))
   // Servidor no gratuito não tem linha de licença: ele é a ausência dela. Sem o
   // teste, é este o topo do funil — quem instalou e ainda não pagou.
-  const free = activeGuilds.filter((g) => byGuild.get(g.guild_id)?.status !== 'active')
+  const isActiveGuild = (guildId: string) => {
+    const license = byGuild.get(guildId)
+    return license ? isLicenseActive(license, now) : false
+  }
+  const free = activeGuilds.filter((g) => !isActiveGuild(g.guild_id))
 
   const mrr = paying.reduce((s, l) => s + l.price_cents, 0)
   const arpa = paying.length ? mrr / paying.length : 0
@@ -160,8 +181,12 @@ export function computeMetrics(d: Snapshot): Metrics {
   const churnRate = base > 0 ? churned30 / base : 0
   const ltv = churnRate > 0 ? arpa / churnRate : null
 
-  const customers = active.length
-  const conversion = activeGuilds.length > 0 ? customers / activeGuilds.length : null
+  // O plano `owner` é o meu próprio servidor, licença vitalícia aplicada no boot.
+  // Contá-lo dos dois lados mostrava 100% de conversão com zero cliente — a
+  // mesma exclusão que founder_slots_left() já fazia e que aqui faltava.
+  const customers = active.filter((l) => l.plan !== OWNER_PLAN)
+  const prospects = activeGuilds.filter((g) => byGuild.get(g.guild_id)?.plan !== OWNER_PLAN)
+  const conversion = prospects.length > 0 ? customers.length / prospects.length : null
 
   const clipKinds = new Set(['clip', 'replay'])
   const clipEvents = d.events.filter((e) => clipKinds.has(e.kind))
